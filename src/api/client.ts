@@ -1,6 +1,15 @@
 import { AbsentApiError, ApiError, ENGINE_DOWN, errorCode, isAbortError, POOLS_FAILED, sentenceFor } from './errors.ts'
-import { healthFixture, poolsFixture } from './fixtures.ts'
-import type { Health, PoolSummary } from './types.ts'
+import { checkFixture, healthFixture, poolsFixture } from './fixtures.ts'
+import type {
+  CheckedGame,
+  EstimateRequest,
+  GameCheck,
+  Health,
+  PoolId,
+  PoolSummary,
+  Reason,
+  StartedJob,
+} from './types.ts'
 
 const DEFAULT_API_BASE = 'http://127.0.0.1:8000'
 
@@ -29,13 +38,21 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
-async function getJson(path: string, signal: AbortSignal): Promise<unknown> {
+async function requestJson(
+  path: string,
+  init: { method?: string; body?: string; signal: AbortSignal },
+): Promise<unknown> {
   let response: Response
   try {
     response = await fetch(joinUrl(path), {
-      signal,
+      method: init.method ?? 'GET',
+      body: init.body,
+      signal: init.signal,
       cache: 'no-store',
-      headers: { Accept: 'application/json' },
+      headers: {
+        Accept: 'application/json',
+        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      },
     })
   } catch (error) {
     if (isAbortError(error)) throw error
@@ -45,6 +62,10 @@ async function getJson(path: string, signal: AbortSignal): Promise<unknown> {
   const body = await readJson(response)
   if (!response.ok) throw new ApiError(response.status, errorCode(body), sentenceFor(body) ?? '')
   return body
+}
+
+async function getJson(path: string, signal: AbortSignal): Promise<unknown> {
+  return requestJson(path, { signal })
 }
 
 function isHealth(value: unknown): value is Health {
@@ -134,5 +155,109 @@ export async function loadLanding(signal: AbortSignal): Promise<LandingData> {
     healthNotice,
     pools: null,
     poolsError: noticeFrom(poolsResult.reason, POOLS_FAILED),
+  }
+}
+
+const REASONS = new Set<Reason>([
+  'ok',
+  'wrong_pool',
+  'unrated',
+  'unfinished',
+  'variant',
+  'name_missing',
+  'too_short',
+])
+
+function isPoolId(value: unknown): value is PoolId {
+  return value === 'classical' || value === 'rapid' || value === 'blitz' || value === 'bullet'
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === 'string'
+}
+
+function parseCheckedGame(value: unknown): CheckedGame | null {
+  if (!value || typeof value !== 'object') return null
+  const game = value as CheckedGame
+  if (typeof game.index !== 'number' || !Number.isInteger(game.index) || game.index < 0) return null
+  if (typeof game.accepted !== 'boolean') return null
+  if (!REASONS.has(game.reason)) return null
+  if (!(game.color === 'white' || game.color === 'black' || game.color === null)) return null
+  if (typeof game.white !== 'string' || typeof game.black !== 'string') return null
+  if (!isNullableString(game.date) || !isNullableString(game.opening) || !isNullableString(game.result)) {
+    return null
+  }
+  if (!(game.moves === null || (typeof game.moves === 'number' && Number.isFinite(game.moves)))) return null
+  return {
+    index: game.index,
+    accepted: game.accepted,
+    reason: game.reason,
+    color: game.color,
+    white: game.white,
+    black: game.black,
+    date: game.date,
+    opening: game.opening,
+    result: game.result,
+    moves: game.moves,
+  }
+}
+
+function parseGameCheck(value: unknown): GameCheck | null {
+  if (!value || typeof value !== 'object') return null
+  const body = value as GameCheck
+  if (!isPoolId(body.pool)) return null
+  if (typeof body.games_required !== 'number' || !Number.isInteger(body.games_required)) return null
+  if (!Array.isArray(body.games)) return null
+  const games: CheckedGame[] = []
+  const seen = new Set<number>()
+  for (const item of body.games) {
+    const game = parseCheckedGame(item)
+    if (!game || seen.has(game.index)) return null
+    seen.add(game.index)
+    games.push(game)
+  }
+  return { pool: body.pool, games_required: body.games_required, games }
+}
+
+function parseStartedJob(value: unknown): StartedJob | null {
+  if (!value || typeof value !== 'object') return null
+  const job = value as StartedJob
+  if (typeof job.id !== 'string' || !job.id.trim()) return null
+  if (job.status !== 'queued' && job.status !== 'running') return null
+  return { id: job.id, status: job.status }
+}
+
+export async function checkGames(
+  body: { pool: PoolId; pgn: string; subject: string },
+  signal: AbortSignal,
+): Promise<GameCheck> {
+  try {
+    const response = await requestJson('/v1/games:check', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      signal,
+    })
+    const parsed = parseGameCheck(response)
+    if (!parsed) throw new ApiError(200, '', '')
+    return parsed
+  } catch (error) {
+    if (error instanceof AbsentApiError) return checkFixture(body.pool)
+    throw error
+  }
+}
+
+export async function postEstimate(body: EstimateRequest, signal: AbortSignal): Promise<StartedJob> {
+  try {
+    const response = await requestJson('/v1/estimates', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      signal,
+    })
+    const parsed = parseStartedJob(response)
+    if (!parsed) throw new ApiError(202, '', '')
+    return parsed
+  } catch (error) {
+    if (error instanceof AbsentApiError) return { id: 'job_01', status: 'queued' }
+    throw error
   }
 }

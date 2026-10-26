@@ -1,11 +1,22 @@
 import { QueenPortrait } from '../board/QueenPortrait.tsx'
+import { EstimateControl } from '../components/EstimateControl.tsx'
 import { PgnField } from '../components/PgnField.tsx'
 import { PoolPicker } from '../components/PoolPicker.tsx'
+import { ScoreSheet } from '../components/ScoreSheet.tsx'
 import { SiteHeader } from '../components/SiteHeader.tsx'
+import { useScoreSheet } from '../upload/useScoreSheet.ts'
 import { useUploadForm } from '../upload/useUploadForm.ts'
 
 export function LandingPage() {
   const form = useUploadForm()
+  const selected = form.pools?.find((pool) => pool.id === form.poolId) ?? null
+  const sheet = useScoreSheet({
+    poolId: form.poolId,
+    gamesRequired: selected?.games_required ?? null,
+    pgn: form.pgn,
+    subject: form.subject,
+    engineDown: form.engineDown,
+  })
   const options =
     form.pools?.map((pool) => ({
       id: pool.id,
@@ -67,11 +78,25 @@ export function LandingPage() {
               onFile={form.chooseFile}
               onRemove={form.removeFile}
             />
-            {form.healthNotice ? (
-              <p className="field-error" role="status">
-                {form.healthNotice}
-              </p>
-            ) : null}
+            <ScoreSheet
+              phase={sheet.phase}
+              games={sheet.games}
+              ticked={sheet.ticked}
+              gamesRequired={selected?.games_required ?? null}
+              poolLabel={selected?.label ?? ''}
+              onToggle={sheet.toggle}
+            />
+            <EstimateControl
+              gamesRequired={selected?.games_required ?? null}
+              enabled={sheet.canEstimate}
+              submitting={sheet.submitting}
+              healthNotice={form.healthNotice}
+              checkError={sheet.checkError}
+              submitError={sheet.submitError}
+              onEstimate={() => {
+                void sheet.submit()
+              }}
+            />
           </div>
         </form>
       </main>

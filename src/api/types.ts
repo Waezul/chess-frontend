@@ -23,3 +23,43 @@ export type ApiFailure = {
   error: string
   message: string
 }
+
+export type Reason =
+  | 'ok'
+  | 'wrong_pool'
+  | 'unrated'
+  | 'unfinished'
+  | 'variant'
+  | 'name_missing'
+  | 'too_short'
+
+export type CheckedGame = {
+  index: number
+  accepted: boolean
+  reason: Reason
+  color: 'white' | 'black' | null
+  white: string
+  black: string
+  date: string | null
+  opening: string | null
+  result: string | null
+  moves: number | null
+}
+
+export type GameCheck = {
+  pool: PoolId
+  games_required: number
+  games: CheckedGame[]
+}
+
+export type EstimateRequest = {
+  pool: PoolId
+  pgn: string
+  subject: string
+  game_indexes: number[]
+}
+
+export type StartedJob = {
+  id: string
+  status: 'queued' | 'running'
+}

@@ -570,3 +570,204 @@ a {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
+
+.score-sheet,
+.estimate-block {
+  min-width: 0;
+}
+
+.score-count {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  scroll-margin-top: calc(3.25rem + env(safe-area-inset-top) + 0.75rem);
+}
+
+.score-list {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  border: 1px solid var(--field-edge);
+  border-radius: 10px;
+  background: var(--field);
+}
+
+.score-list li + li {
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--ink) 16%, transparent),
+    color-mix(in srgb, var(--ink) 16%, transparent)
+  );
+  background-repeat: no-repeat;
+  background-position: right top;
+  background-size: calc(100% - 2.9rem) 1px;
+}
+
+.score-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  scroll-margin-top: calc(3.25rem + env(safe-area-inset-top) + 0.75rem);
+}
+
+label.score-row {
+  cursor: pointer;
+}
+
+.score-row.is-refused {
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-left: 2.9rem;
+  color: var(--ink-dim);
+  cursor: default;
+}
+
+.score-line,
+.score-reason {
+  margin: 0;
+  min-width: 0;
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.score-row .score-line {
+  flex: 1;
+}
+
+.score-reason {
+  color: var(--ink-dim);
+}
+
+.score-row input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.15rem 0 0;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background-color: transparent;
+  flex: none;
+  appearance: none;
+}
+
+.score-row input:checked {
+  border-color: var(--ink);
+  background-color: var(--ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.2 8.3 6.4 11.4 12.8 4.6' fill='none' stroke='%23141413' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 0.9rem;
+}
+
+.score-row input:focus {
+  outline: none;
+}
+
+.score-row:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.estimate-block {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+}
+
+.estimate-block .field-error {
+  margin: 0;
+}
+
+.estimate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--fill);
+  color: var(--bg);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.estimate:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.estimate:active:not(:disabled) {
+  background: #cfcfc8;
+}
+
+@media (hover: hover) {
+  .estimate:hover:not(:disabled) {
+    background: #e4e4df;
+  }
+
+  label.score-row:hover {
+    background-color: color-mix(in srgb, var(--ink) 6%, transparent);
+  }
+}
+
+@media (forced-colors: active) {
+  .score-list,
+  .estimate {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    border-radius: 0;
+  }
+
+  .estimate {
+    background: ButtonText;
+    color: ButtonFace;
+  }
+
+  .estimate:disabled {
+    opacity: 1;
+    background: Canvas;
+    color: GrayText;
+    border-color: GrayText;
+  }
+
+  .estimate:active:not(:disabled) {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .score-row,
+  .score-row.is-refused,
+  .score-reason,
+  .score-count {
+    color: CanvasText;
+  }
+
+  .score-row input {
+    appearance: auto;
+    background: ButtonFace;
+    forced-color-adjust: auto;
+  }
+
+  .score-row:focus-within {
+    outline-color: CanvasText;
+  }
+}
