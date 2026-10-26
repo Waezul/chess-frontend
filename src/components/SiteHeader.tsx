@@ -6,7 +6,7 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <Link to="/" className="wordmark" aria-current={pathname === '/' ? 'page' : undefined}>
-        Eight games.
+        Range
       </Link>
       <nav aria-label="Pages">
         <Link
@@ -14,7 +14,7 @@ export function SiteHeader() {
           className="method-link"
           aria-current={pathname === '/method' ? 'page' : undefined}
         >
-          Method
+          How it works
         </Link>
       </nav>
     </header>

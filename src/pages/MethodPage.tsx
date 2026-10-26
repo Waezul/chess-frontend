@@ -5,7 +5,7 @@ export function MethodPage() {
     <div className="room">
       <SiteHeader />
       <main className="page">
-        <h1>Method</h1>
+        <h1>How it works</h1>
       </main>
     </div>
   )

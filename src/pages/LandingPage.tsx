@@ -11,8 +11,8 @@ export function LandingPage() {
         </div>
         <div className="portrait-scrim">
           <div className="portrait-copy">
-            <h1>Show eight rated games.</h1>
-            <p>The result is a 10–90% band, not a single rating.</p>
+            <h1>Bring eight rated games.</h1>
+            <p>You get a range, not a single rating.</p>
           </div>
         </div>
       </main>
