@@ -101,9 +101,8 @@ a {
 .portrait {
   position: relative;
   display: flex;
-  flex: 1 0 auto;
   align-items: center;
-  min-height: min(70vh, 36rem);
+  min-height: calc(100dvh - 3.25rem);
   animation: portrait-in 400ms ease both;
 }
 
@@ -221,4 +220,231 @@ a {
   .portrait-copy {
     background: Canvas;
   }
+
+  .drop,
+  .field-input {
+    border-color: CanvasText;
+  }
+
+  .field-error {
+    color: CanvasText;
+  }
+
+  .pool-option input {
+    accent-color: auto;
+  }
+}
+
+.upload {
+  width: min(var(--column), 100%);
+  padding: 1.75rem max(var(--page-pad), env(safe-area-inset-right))
+    max(3.5rem, env(safe-area-inset-bottom)) var(--page-pad);
+  border-top: 1px solid var(--line);
+}
+
+.upload-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: min(100%, 26.25rem);
+  min-width: 0;
+}
+
+.upload fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.upload legend,
+.field-label {
+  display: block;
+  margin: 0 0 0.45rem;
+  padding: 0;
+  color: var(--ink);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.field-status,
+.hint,
+.field-error,
+.file-name {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.hint {
+  margin-top: 0.55rem;
+  max-width: 62ch;
+  color: var(--ink-dim);
+}
+
+.field-error {
+  color: var(--error);
+}
+
+.hint + .field-error,
+.pool-picker .field-error {
+  margin-top: 0.55rem;
+}
+
+.pool-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.55rem 0;
+  cursor: pointer;
+}
+
+.pool-option + .pool-option {
+  margin-top: 0.15rem;
+}
+
+.pool-option input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.15rem 0 0;
+  accent-color: var(--ink);
+  flex: none;
+}
+
+.pool-option.is-unavailable {
+  cursor: default;
+}
+
+.pool-copy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.pool-option.is-unavailable .pool-label {
+  color: var(--ink-dim);
+}
+
+.pool-reason {
+  color: var(--ink-faint);
+}
+
+.field-input,
+.field-area {
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--ink);
+  font: inherit;
+}
+
+.field-input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--line);
+}
+
+.field-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  box-shadow: 0 0 0 1000px var(--bg) inset;
+}
+
+.drop {
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+}
+
+.drop.is-over,
+.drop:focus-within,
+.field-input:focus {
+  border-color: var(--ink);
+}
+
+.field-area {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 8.5rem;
+  padding: 0;
+  border: 0;
+  resize: vertical;
+}
+
+.file-meta {
+  margin-top: 0.85rem;
+}
+
+.file-name {
+  overflow-wrap: anywhere;
+}
+
+.file-size {
+  margin: 0.15rem 0 0;
+  color: var(--ink-dim);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  align-items: center;
+  margin-top: 0.35rem;
+}
+
+.text-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.25rem 0.1rem;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+}
+
+.text-button:active {
+  opacity: 0.7;
+}
+
+.file-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.file-button input:focus {
+  outline: none;
+}
+
+.file-button:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
