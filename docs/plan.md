@@ -1,4 +1,4 @@
-# Eight games — design plan
+# Range — design plan
 
 The page is a measuring tool. [frontend.md](frontend.md) fixes the copy, the rounding, the column order, and what must stay off the page. [backend.md](backend.md) is the HTTP contract (`http://127.0.0.1:8000` in development). This file fixes the look and the first screen.
 
@@ -29,7 +29,7 @@ The lime accent and the warm paper background stay dropped. The room is black, w
 - Show the server `message` when it is a non-empty string. Otherwise use the sentence in the error table in [frontend.md](frontend.md).
 - Components take typed payloads. Fixtures from [frontend.md](frontend.md) stand in while the API is absent. Swapping them for the network does not change the components. The fixture file is the only place those sample numbers live.
 
-Wordmark, until you name it: **Eight games.** Method sits beside it and goes to `/method`.
+Wordmark: **Range**. How it works sits beside it and goes to `/method`.
 
 ## What the page shows
 
@@ -57,7 +57,7 @@ Ranked. If a later item fights an earlier one, the earlier one wins.
 - A feature grid, a pricing block, an account control, or a second call to action in the landing.
 - A generated write-up. No Gemini call, no other chat model, and no sentence written on the client from a feature name. The explanation is `drivers[].text`, the lab line, and `tail_note`. A general model would invent style, mistakes, and confidence the rating model did not measure, and it would send the player’s games to another service.
 
-The hero may say that the result is a 10–90% band. That phrase is the definition of `q10` and `q90` in [frontend.md](frontend.md). It is not a measured accuracy.
+The landing headline is `Get your Elo guessed.` The line under it says the model will guess your Elo, then what the 10–90% band is: the low and high of that guess, not how sure the model is. That band is the definition of `q10` and `q90` in [frontend.md](frontend.md). It is not a measured accuracy.
 
 ## Landing
 
@@ -66,12 +66,13 @@ Desktop, first viewport. One column, aligned to the left, max width 1120px. The 
 Before a file, the queen fills the viewport. The title sits on the dark side of her, left aligned, over a quiet scrim so the type stays on black.
 
 ```
-Eight games.                              Method
+Range                                 How it works
 
 ┌─────────────────────────────────────────┐
-│ Show eight rated games.          queen │
-│ The result is a 10–90% band,            │
-│ not a single rating.                    │
+│ Get your Elo guessed.            queen │
+│ Our model will guess your Elo. The      │
+│ 10–90% band is the low and high of      │
+│ that guess, not how sure the model is.  │
 │                                         │
 └─────────────────────────────────────────┘
 
@@ -83,9 +84,9 @@ Eight games.                              Method
 After a playable PGN, the same column holds the full board. The headline leaves the frame and sits above it, small enough that the set can be read.
 
 ```
-Eight games.                              Method
+Range                                 How it works
 
-Show eight rated games.
+Get your Elo guessed.
 
 Game 2 of 12          14.  Nf3          White to move
                  ┌───────────────────┐
@@ -116,11 +117,11 @@ The result renders under the form. A new check clears it. The footer is `{pool l
 Narrow widths stack the same way. The board scales inside the column. Nothing scrolls sideways. At a large text size the headline wraps, the board gets shorter, and the form stays one column.
 
 ```
-Eight games.     Method
+Range      How it works
 
 ┌───────────────┐
-│ Show eight    │
-│ rated games.  │
+│ Get your Elo  │
+│ guessed.      │
 │          queen│
 └───────────────┘
 
@@ -175,7 +176,7 @@ Hierarchy is size and weight. No all-caps eyebrows, no tracked-out labels, no mi
 
 Body measure stays under 62 characters. 13px is the floor. Nothing uses a light or thin weight. The band and the table use `font-variant-numeric: tabular-nums`.
 
-The headline is `Show eight rated games.` The line under it is `The result is a 10–90% band, not a single rating.` Both are left aligned.
+The headline is `Get your Elo guessed.` The line under it is `Our model will guess your Elo. The 10–90% band is the low and high of that guess, not how sure the model is.` Both are left aligned.
 
 ### Board
 
@@ -205,7 +206,7 @@ The canvas element is `aria-hidden`. The game line, the move, and the side to mo
 
 One prominent button, the estimate. White fill, black label, 44px tall, full width of the column up to 420px. Hover darkens the fill to `#E4E4DF`. Press darkens it to `#CFCFC8`. Disabled is the same button at 40% opacity, not a new color, and it does not submit.
 
-Cancel, remove, and Method are text buttons in `--ink`, with the same 44px hit height and an underline on hover.
+Cancel, remove, and How it works are text buttons in `--ink`, with the same 44px hit height and an underline on hover.
 
 The drop target is a rectangle with a 1px `--line` border and square corners. Drag-over and keyboard focus turn that border `--ink`. The file input is a real control, labeled `Choose PGN file`. Paste and drop write the same string.
 

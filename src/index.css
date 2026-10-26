@@ -1,12 +1,224 @@
+@import './styles/tokens.css';
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
+html {
+  color-scheme: dark;
+  background: var(--bg);
+}
+
 body {
   margin: 0;
-  background: #090909;
-  color: #f5f5f2;
-  font-family: sans-serif;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Schibsted Grotesk', 'Segoe UI', sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.45;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+a {
+  color: inherit;
+}
+
+.room {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.site-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-height: 3.25rem;
+  padding-top: env(safe-area-inset-top);
+  padding-right: max(var(--page-pad), env(safe-area-inset-right));
+  padding-left: var(--page-pad);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.wordmark,
+.method-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font-size: 1.0625rem;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.wordmark {
+  font-weight: 600;
+  letter-spacing: -0.011em;
+}
+
+.method-link {
+  justify-content: center;
+  min-width: 44px;
+  padding-inline: 0.35rem;
+  font-weight: 400;
+}
+
+.wordmark:hover,
+.method-link:hover,
+.method-link[aria-current='page'] {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+.wordmark:active,
+.method-link:active {
+  opacity: 0.7;
+}
+
+.portrait {
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  align-items: center;
+  min-height: min(70vh, 36rem);
+  animation: portrait-in 400ms ease both;
+}
+
+.portrait-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.portrait-canvas > div {
+  width: 100%;
+  height: 100%;
+}
+
+.portrait::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    #090909 0%,
+    rgb(9 9 9 / 96%) 38%,
+    rgb(9 9 9 / 72%) 48%,
+    rgb(9 9 9 / 0%) 64%
+  );
+}
+
+.portrait-scrim {
+  position: relative;
+  z-index: 1;
+  width: min(var(--column), 100%);
+  padding-left: var(--page-pad);
+}
+
+.portrait-copy {
+  width: min(100%, 42rem);
+  padding-block: clamp(1.5rem, 6vh, 3.5rem);
+}
+
+.portrait-copy h1 {
+  margin: 0;
+  max-width: min(9.2em, 46vw);
+  font-size: clamp(2.75rem, 6vw, 5.5rem);
+  font-weight: 700;
+  line-height: 0.96;
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+}
+
+.portrait-copy p {
+  margin: 1rem 0 0;
+  max-width: min(40ch, 46vw);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.page {
+  width: min(var(--column), 100%);
+  padding: 2.5rem var(--page-pad) 4rem;
+}
+
+.page h1,
+.page p {
+  margin: 0;
+}
+
+.page p {
+  margin-top: 0.75rem;
+}
+
+@keyframes portrait-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .portrait::before {
+    background: linear-gradient(90deg, var(--bg) 0 46%, transparent 46%);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .portrait::before {
+    background: linear-gradient(90deg, var(--bg) 0 42%, rgb(9 9 9 / 0%) 58%);
+  }
+}
+
+@media (forced-colors: active) {
+  :focus {
+    outline-color: CanvasText;
+  }
+
+  .site-header {
+    border-bottom-color: CanvasText;
+  }
+
+  .portrait::before {
+    background: none;
+  }
+
+  .portrait-copy {
+    background: Canvas;
+  }
 }
