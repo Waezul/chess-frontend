@@ -1,10 +1,16 @@
 import { PerspectiveCamera } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Component, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
-import { Color, type PerspectiveCamera as PerspectiveCameraImpl, type SpotLight } from 'three'
+import {
+  Color,
+  MeshStandardMaterial,
+  type PerspectiveCamera as PerspectiveCameraImpl,
+  type SpotLight,
+} from 'three'
 import { createQueenProfile } from './queenProfile.ts'
 
 const IVORY = '#f7f4ec'
+const ROOM = '#0b0c0d'
 
 function IvoryMaterial() {
   return (
@@ -138,18 +144,64 @@ function Settle() {
   return null
 }
 
+function Ground() {
+  const material = useMemo(() => {
+    const mat = new MeshStandardMaterial({
+      color: '#000000',
+      roughness: 1,
+      metalness: 0,
+      transparent: true,
+      depthWrite: false,
+    })
+    mat.customProgramCacheKey = () => 'room-ground'
+    // The ground stays the room color. This only draws the key light's shadow.
+    mat.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
+        `
+          float groundShadow = 1.0;
+          #if defined( USE_SHADOWMAP ) && NUM_SPOT_LIGHT_SHADOWS > 0
+            groundShadow = getShadow(
+              spotShadowMap[ 0 ],
+              spotLightShadows[ 0 ].shadowMapSize,
+              spotLightShadows[ 0 ].shadowIntensity,
+              spotLightShadows[ 0 ].shadowBias,
+              spotLightShadows[ 0 ].shadowRadius,
+              vSpotLightCoord[ 0 ]
+            );
+          #endif
+          vec3 outgoingLight = vec3(0.0);
+        `,
+      )
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <opaque_fragment>',
+        'gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0 - groundShadow);',
+      )
+    }
+    return mat
+  }, [])
+
+  return (
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0.35, 0, 0]}
+      receiveShadow
+      material={material}
+    >
+      <circleGeometry args={[48, 48]} />
+    </mesh>
+  )
+}
+
 function PortraitScene() {
   return (
     <>
-      <color attach="background" args={['#090909']} />
+      <color attach="background" args={[ROOM]} />
       <hemisphereLight args={['#f7f4ec', '#090909', 0.14]} />
       <KeyLight />
       <directionalLight position={[-2.4, 2.2, 4.2]} intensity={0.45} color="#f3eee4" />
       <directionalLight position={[-3.6, 3.4, -2.2]} intensity={1.35} color="#d5dee8" />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0.35, 0, 0]} receiveShadow>
-        <circleGeometry args={[48, 48]} />
-        <meshStandardMaterial color="#090909" roughness={1} metalness={0} />
-      </mesh>
+      <Ground />
       <Queen />
       <CameraRig />
       <Settle />
@@ -187,10 +239,10 @@ export function QueenPortrait() {
           powerPreference: 'high-performance',
         }}
         onCreated={({ gl }) => {
-          gl.setClearColor(new Color('#090909'), 1)
+          gl.setClearColor(new Color(ROOM), 1)
           gl.toneMappingExposure = 1.05
         }}
-        style={{ width: '100%', height: '100%', display: 'block', background: '#090909' }}
+        style={{ width: '100%', height: '100%', display: 'block', background: ROOM }}
       >
         <PortraitScene />
       </Canvas>
