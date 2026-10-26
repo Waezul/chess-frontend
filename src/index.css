@@ -413,8 +413,7 @@ a {
   color: var(--ink-faint);
 }
 
-.field-input,
-.field-area {
+.field-input {
   margin: 0;
   background: transparent;
   color: var(--ink);
@@ -450,18 +449,14 @@ a {
   box-shadow: 0 0 0 1000px var(--field) inset;
 }
 
-.drop {
+.drop.has-file {
   padding: 0.85rem 0.9rem 0.35rem;
 }
 
 .drop.is-over,
-.drop:has(.field-area:focus) {
+.drop:has(.drop-input:focus) {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
-}
-
-.field-area:focus {
-  outline: none;
 }
 
 @media (hover: hover) {
@@ -471,19 +466,44 @@ a {
   }
 }
 
-.field-area {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
+.drop-choose {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
   min-height: 8.5rem;
-  padding: 0;
-  border: 0;
-  resize: vertical;
+  padding: 1.25rem 0.9rem;
+}
+
+.drop-title,
+.drop-aside {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.drop-aside {
+  color: var(--ink-dim);
+}
+
+.drop-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.drop-input:focus {
+  outline: none;
 }
 
 .file-meta {
-  margin-top: 0.85rem;
+  margin-top: 0;
 }
 
 .file-name {

@@ -47,7 +47,7 @@ export function LandingPage() {
             />
             <div className="field">
               <label className="field-label" htmlFor="subject">
-                Name you played under
+                Username you played under
               </label>
               <input
                 id="subject"
@@ -61,11 +61,9 @@ export function LandingPage() {
               />
             </div>
             <PgnField
-              pgn={form.pgn}
               fileName={form.fileName}
               fileBytes={form.fileBytes}
               error={form.pgnError}
-              onPgnChange={form.editPgn}
               onFile={form.chooseFile}
               onRemove={form.removeFile}
             />

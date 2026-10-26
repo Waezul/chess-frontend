@@ -92,7 +92,7 @@ export function useUploadForm() {
       setPgnError(null)
     } catch {
       if (!alive.current || id !== readId.current) return
-      setPgnError('That file could not be read. Paste the games instead.')
+      setPgnError('That file could not be read. Choose another.')
     }
   }
 
