@@ -1,12 +1,16 @@
 import { Link, useLocation } from 'react-router-dom'
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  overlay?: boolean
+}
+
+export function SiteHeader({ overlay = false }: SiteHeaderProps) {
   const { pathname } = useLocation()
 
   return (
-    <header className="site-header">
+    <header className={overlay ? 'site-header site-header-overlay' : 'site-header'}>
       <Link to="/" className="wordmark" aria-current={pathname === '/' ? 'page' : undefined}>
-        Range
+        Queen's Range
       </Link>
       <nav aria-label="Pages">
         <Link

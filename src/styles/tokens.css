@@ -10,6 +10,8 @@
   --square-dark: #5c5954;
   --piece-white: #f7f4ec;
   --piece-black: #141413;
+  --field: var(--piece-black);
+  --field-edge: #6e6a62;
   --page-pad: max(clamp(1.25rem, 4vw, 2.75rem), env(safe-area-inset-left));
   --column: 1120px;
 }
@@ -17,6 +19,8 @@
 @media (prefers-contrast: more) {
   :root {
     --ink-dim: #d4d4ce;
+    --ink-faint: #d4d4ce;
     --line: #8a8a84;
+    --field-edge: #d4d4ce;
   }
 }

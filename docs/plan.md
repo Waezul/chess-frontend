@@ -1,4 +1,4 @@
-# Range — design plan
+# Queen's Range — design plan
 
 The page is a measuring tool. [frontend.md](frontend.md) fixes the copy, the rounding, the column order, and what must stay off the page. [backend.md](backend.md) is the HTTP contract (`http://127.0.0.1:8000` in development). This file fixes the look and the first screen.
 
@@ -6,7 +6,7 @@ The first screen is a landing. A person lands on a dark page, close on the white
 
 ## Intent
 
-Someone with a Lichess export should understand the job in one glance: bring rated games, tick the ones this model can score, and read a band. The board is the object in the room. Before a file, it is a portrait of the white queen. After a file, it plays those games. It is not a match they can play.
+Someone with a Lichess name, or a PGN they already have, should understand the job in one glance: bring rated games, tick the ones this model can score, and read a band. The board is the object in the room. Before a file, it is a portrait of the white queen. After a file, it plays those games. It is not a match they can play.
 
 ## Approaches
 
@@ -23,13 +23,13 @@ The lime accent and the warm paper background stay dropped. The room is black, w
 - `/` is the tool. `/method` is the model card for the selected pool. `/report/{id}` is the finished read. `{id}` is the job id from `POST /v1/estimates`.
 - On load: `GET /v1/health` and `GET /v1/pools`.
 - The picker change and `/method`: `GET /v1/pools/{pool}`.
-- Paste or subject, 400 ms after the edit: `POST /v1/games:check`. Skip an empty paste. A newer edit wins.
+- Paste or subject, 400 ms after the edit: `POST /v1/games:check`. Skip an empty paste. A newer edit wins. A Lichess load writes that same paste and that same subject. The Queen's Range API does not call Lichess.
 - The button, only when the ticked count equals that pool’s `games_required`: `POST /v1/estimates`, then `GET /v1/estimates/{id}` every 1 second.
 - Base URL from the environment. JSON only. No API key.
 - Show the server `message` when it is a non-empty string. Otherwise use the sentence in the error table in [frontend.md](frontend.md).
 - Components take typed payloads. Fixtures from [frontend.md](frontend.md) stand in while the API is absent. Swapping them for the network does not change the components. The fixture file is the only place those sample numbers live.
 
-Wordmark: **Range**. How it works sits beside it and goes to `/method`.
+Wordmark: **Queen's Range**. How it works sits beside it and goes to `/method`.
 
 ## What the page shows
 
@@ -54,7 +54,7 @@ Ranked. If a later item fights an earlier one, the earlier one wins.
 - Clocks, captured material, an eval bar, player avatars, a rating next to a name, or a label that calls a move a blunder or a mistake. The reference board shows a name and a rating. This board does not.
 - Blitz or bullet treated as available. They render disabled, with `unavailable_reason`.
 - Hardcoded model metrics: test-player counts, percents, bias, depth, revision, `elo_min`, `elo_max`. Those render from the response that owns them, or not at all.
-- A feature grid, a pricing block, an account control, or a second call to action in the landing.
+- A feature grid, a pricing block, a Queen's Range account, or a second estimate button. The name row can load public Lichess games, and it can connect with Lichess to fill that name. Neither control starts a read.
 - A generated write-up. No Gemini call, no other chat model, and no sentence written on the client from a feature name. The explanation is `drivers[].text`, the lab line, and `tail_note`. A general model would invent style, mistakes, and confidence the rating model did not measure, and it would send the player’s games to another service.
 
 The landing headline is `Get your Elo guessed.` The line under it says the model will guess your Elo, then what the 10–90% band is: the low and high of that guess, not how sure the model is. That band is the definition of `q10` and `q90` in [frontend.md](frontend.md). It is not a measured accuracy.
@@ -66,7 +66,7 @@ Desktop, first viewport. One column, aligned to the left, max width 1120px. The 
 Before a file, the queen fills the viewport. The title sits on the dark side of her, left aligned, over a quiet scrim so the type stays on black.
 
 ```
-Range                                 How it works
+Queen's Range                         How it works
 
 ┌─────────────────────────────────────────┐
 │ Get your Elo guessed.            queen │
@@ -78,13 +78,14 @@ Range                                 How it works
 
         time control
         name
+        Load latest rated games    Connect with Lichess
         drop a .pgn, or paste it
 ```
 
 After a playable PGN, the same column holds the full board. The headline leaves the frame and sits above it, small enough that the set can be read.
 
 ```
-Range                                 How it works
+Queen's Range                         How it works
 
 Get your Elo guessed.
 
@@ -99,14 +100,15 @@ Game 2 of 12          14.  Nf3          White to move
 
         time control
         name
+        Load latest rated games    Connect with Lichess
         the file, with its size
 ```
 
 The upload stack starts under the board, still in spec order, so the file control is what the landing is for:
 
 1. Pool. One radio per row from `GET /v1/pools`, in that order. `available: false` is visible and disabled, with `unavailable_reason` beside it.
-2. Subject. Label: `Name you played under`. Sent, then not shown again.
-3. PGN. A drop target and a text area. The file is read as UTF-8 into the same field. The chosen file shows its real name and its real byte size, with remove and replace. Under the target, one line: `A PGN is the text record of the games. Lichess can export one.`
+2. Subject. Label: `Name you played under`. Sent, then not shown again. When the games are loaded from Lichess, this is the username.
+3. PGN. A drop target and a text area. The file is read as UTF-8 into the same field. A Lichess load writes the same field. The chosen file shows its real name and its real byte size, with remove and replace. Under the target, one line: `A PGN is the text record of the games. Load your latest rated games, or drop a file.`
 
 Then, still on `/`, in order: checklist, button, wait, result, failure. The button label is `Estimate from these {games_required}`, so the digit is the pool’s. On the live pools that reads `Estimate from these 8`. It is disabled until the ticked count equals `games_required`.
 
@@ -117,7 +119,7 @@ The result renders under the form. A new check clears it. The footer is `{pool l
 Narrow widths stack the same way. The board scales inside the column. Nothing scrolls sideways. At a large text size the headline wraps, the board gets shorter, and the form stays one column.
 
 ```
-Range      How it works
+Queen's Range      How it works
 
 ┌───────────────┐
 │ Get your Elo  │
@@ -127,8 +129,34 @@ Range      How it works
 
 time control
 name
+Load latest rated games
+Connect with Lichess
 drop or paste
 ```
+
+### Lichess
+
+The paste box stays the way a file enters the estimate. A Lichess load writes the same string a drop writes. `POST /v1/games:check` and `POST /v1/estimates` stay as they are. The Queen's Range server never calls Lichess and never sees a Lichess token.
+
+On the name row, two text buttons sit under the field. They use the same treatment as Cancel and How it works. The estimate remains the one filled button.
+
+`Load latest rated games` is enabled when the trimmed name is non-empty and the selected pool is available. It asks Lichess from the browser, with no Authorization header and with `Accept: application/x-chess-pgn`:
+
+`GET https://lichess.org/api/games/user/{username}?rated=true&perfType={pool}&moves=true&opening=true&tags=true&max=30`
+
+`{username}` is the trimmed name, encoded as one path segment. `{pool}` is the selected pool id. For rapid, the query is `perfType=rapid`. For classical, it is `perfType=classical`. Blitz and bullet stay disabled, so this control does not run for them.
+
+Lichess returns those games as PGN, newest first. The request is anonymous. The games are public. The stream is throttled to about 20 games a second, which covers one person at 30 games. Thirty are requested because the checklist still refuses a game that is too short, unfinished, the wrong pool, unrated, a variant, or missing the name. Eight accepted games are still required. The load does not tick rows. There is no second page. A fuller export still drops into the same field.
+
+The response body replaces the paste. The subject is the username they typed. While the load is in flight, skip `games:check`. When the paste is replaced, check once. The line under the name reads `Loading games from Lichess.` A newer load wins, and a stale response is ignored.
+
+A body over 2,097,152 bytes is refused with `That file is over 2 MB.` and the paste stays. An empty body leaves the paste and shows `No rated games came back for that player.` A 404 shows `No Lichess player by that name.` A 429 shows `Lichess is limiting requests. Wait a moment and try again.` Any other failure shows `Lichess could not be reached. Paste a PGN instead.` After a failure, check only if the name changed.
+
+Changing the pool, while the paste is still that Lichess response, loads again for the new pool. Editing the paste, dropping a file, or clearing it leaves the text in place, and the pool change only re-checks.
+
+`Connect with Lichess` fills the name and then runs that same load. It does not raise the 30-game cap, and the games request stays anonymous. The client is public: a client id from the environment, no client secret, PKCE with `S256`, and no scopes. The browser opens `https://lichess.org/oauth`, returns to `/`, and exchanges the code with `POST https://lichess.org/api/token`. The code is then removed from the address. `GET https://lichess.org/api/account` supplies `username`. That string is written into the name field. Every other account field is discarded, including ratings. The token is stored in this browser. Expect it to last about a year, until the player revokes it on Lichess. It is never sent to the Queen's Range API, and it is not attached to the games request. `Forget Lichess` removes it from this browser. If they decline, or the exchange fails, the form stays as it was and the line reads `Lichess did not connect. Type the name instead.`
+
+Rating tags inside the returned PGN stay in the string. They stay off the board, the checklist, and the report, as they do for a pasted file.
 
 ## Visual system
 
@@ -250,6 +278,8 @@ Same ground, same type, same header. No canvas. The summary paragraphs sit in a 
 | Loading pools | Header, headline, board. The radio group says `Loading time controls.` |
 | Pools failed | The headline and board stay. One sentence where the radios go: `The time controls could not be loaded. Reload the page and try again.` |
 | Idle | Portrait of the queen. Radios, empty name, empty paste, button disabled. |
+| Loading from Lichess | Name and paste stay editable. The line under the name says `Loading games from Lichess.` The check waits. |
+| Lichess failed | The paste is unchanged. One sentence under the name. |
 | Checking | Name and paste stay editable. Checklist slot says `Reading headers.` The reel plays if the text parsed. |
 | Ready | Checklist filled. Button enabled only at `games_required` ticks. Reel keeps playing. |
 | File too large | The paste is unchanged. The portrait stays. `That file is over 2 MB.` |
@@ -267,7 +297,7 @@ My calls, so you can correct them before any code:
 - Vite, React, TypeScript, React Router. Routes `/`, `/method`, and `/report/:id`. No chat-model SDK.
 - CSS custom properties in one token file. No component library, no glass, no card grid.
 - `@react-three/fiber` and `@react-three/drei` for the board. `chess.js` for the reel only. No `chessground`. The API module does not import the parser.
-- One API module, one fixture module, one formatter module: round-to-10, integer Elo, signed bias, whole percents. One reel module: PGN text in, playable games and plies out.
+- One API module, one fixture module, one formatter module: round-to-10, integer Elo, signed bias, whole percents. One reel module: PGN text in, playable games and plies out. One Lichess module: a username and a pool in, PGN text out. It does not import the estimate client, and the estimate client does not import it.
 - Files stay small: types, client, formatters, reel, tokens, landing shell, board, pool picker, score sheet, report, method table, and one state owner for `/`. The posted checklist for the current job is held in memory so the report can list those games. It is dropped on a new check.
 
 Build order, after this plan is approved:
@@ -279,6 +309,8 @@ Build order, after this plan is approved:
 5. The job: poll, cancel, timeout, engine-down. On `done`, open `/report/{id}`.
 6. The report and `/method`, rendered only from payload fields. A reload of the report with no checklist omits the game list.
 7. Then the states in the table above, at a narrow width and at a large text size.
+8. Lichess load ([#9](https://github.com/Waezul/chess-frontend/issues/9)). The name is the username. Thirty rated games in the selected pool replace the paste. The checklist and the eight-game gate are unchanged.
+9. Connect with Lichess ([#10](https://github.com/Waezul/chess-frontend/issues/10)). A public PKCE login writes the account username and runs the same load. The token stays in the browser.
 
 ## Done when
 
@@ -298,3 +330,7 @@ The checklist at the end of [frontend.md](frontend.md) still passes, and the fir
 - A header with a rating never appears on the board or in the game line.
 - Reduced motion cuts the zoom and the ply slide, and the move text still advances.
 - Clearing the file returns the camera to the queen.
+- A Lichess username loads 30 rated games for the selected pool into the paste, and the subject is that username.
+- The estimate still posts only when the ticked count equals `games_required`.
+- Connect with Lichess writes the account username and runs that same load. The games request carries no token. The Queen's Range API receives no token.
+- A rating from the account payload, or from the PGN, stays off the board, the checklist, and the report.
