@@ -151,7 +151,8 @@ a {
   font-weight: 700;
   line-height: 0.96;
   letter-spacing: -0.028em;
-  text-wrap: balance;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
 }
 
 .portrait-copy p {
@@ -160,6 +161,14 @@ a {
   font-size: 1.0625rem;
   font-weight: 400;
   line-height: 1.45;
+}
+
+/* rem follows the root font, so larger text widens this column before a word breaks. */
+@media (max-width: 20rem) {
+  .portrait-copy h1,
+  .portrait-copy p {
+    max-width: 100%;
+  }
 }
 
 .page {
