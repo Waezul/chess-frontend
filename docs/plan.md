@@ -57,7 +57,7 @@ Ranked. If a later item fights an earlier one, the earlier one wins.
 - A feature grid, a pricing block, an account control, or a second call to action in the landing.
 - A generated write-up. No Gemini call, no other chat model, and no sentence written on the client from a feature name. The explanation is `drivers[].text`, the lab line, and `tail_note`. A general model would invent style, mistakes, and confidence the rating model did not measure, and it would send the player’s games to another service.
 
-The landing says the result is a range, not a single rating. The 10–90% band is the definition of `q10` and `q90` in [frontend.md](frontend.md). It is not a measured accuracy, and it is not the landing sentence.
+The landing headline is `Get your Elo guessed.` The line under it says the model will guess your Elo, then what the 10–90% band is: the low and high of that guess, not how sure the model is. That band is the definition of `q10` and `q90` in [frontend.md](frontend.md). It is not a measured accuracy.
 
 ## Landing
 
@@ -69,8 +69,10 @@ Before a file, the queen fills the viewport. The title sits on the dark side of 
 Range                                 How it works
 
 ┌─────────────────────────────────────────┐
-│ Bring eight rated games.         queen │
-│ You get a range, not a single rating.   │
+│ Get your Elo guessed.            queen │
+│ Our model will guess your Elo. The      │
+│ 10–90% band is the low and high of      │
+│ that guess, not how sure the model is.  │
 │                                         │
 └─────────────────────────────────────────┘
 
@@ -84,7 +86,7 @@ After a playable PGN, the same column holds the full board. The headline leaves 
 ```
 Range                                 How it works
 
-Bring eight rated games.
+Get your Elo guessed.
 
 Game 2 of 12          14.  Nf3          White to move
                  ┌───────────────────┐
@@ -118,8 +120,8 @@ Narrow widths stack the same way. The board scales inside the column. Nothing sc
 Range      How it works
 
 ┌───────────────┐
-│ Bring eight   │
-│ rated games.  │
+│ Get your Elo  │
+│ guessed.      │
 │          queen│
 └───────────────┘
 
@@ -174,7 +176,7 @@ Hierarchy is size and weight. No all-caps eyebrows, no tracked-out labels, no mi
 
 Body measure stays under 62 characters. 13px is the floor. Nothing uses a light or thin weight. The band and the table use `font-variant-numeric: tabular-nums`.
 
-The headline is `Bring eight rated games.` The line under it is `You get a range, not a single rating.` Both are left aligned.
+The headline is `Get your Elo guessed.` The line under it is `Our model will guess your Elo. The 10–90% band is the low and high of that guess, not how sure the model is.` Both are left aligned.
 
 ### Board
 

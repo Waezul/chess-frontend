@@ -104,7 +104,7 @@ function CameraRig() {
   useLayoutEffect(() => {
     const camera = cameraRef.current
     if (!camera) return
-    camera.lookAt(narrow ? 0.52 : 0.22, 0.9, 0)
+    camera.lookAt(narrow ? 0.16 : 0.22, 0.92, 0)
     invalidate()
   }, [invalidate, narrow])
 
@@ -112,10 +112,10 @@ function CameraRig() {
     <PerspectiveCamera
       ref={cameraRef}
       makeDefault
-      fov={narrow ? 30 : 27}
+      fov={narrow ? 32 : 27}
       near={0.1}
       far={40}
-      position={narrow ? [0.36, 1.08, 4.6] : [-0.05, 1.12, 4.85]}
+      position={narrow ? [-0.15, 1.1, 5.5] : [-0.05, 1.12, 4.85]}
     />
   )
 }

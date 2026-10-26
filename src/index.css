@@ -157,7 +157,7 @@ a {
 
 .portrait-copy p {
   margin: 1rem 0 0;
-  max-width: 34ch;
+  max-width: min(40ch, 46vw);
   font-size: 1.0625rem;
   font-weight: 400;
   line-height: 1.45;
