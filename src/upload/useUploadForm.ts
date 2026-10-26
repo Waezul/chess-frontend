@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { loadLanding } from '../api/client.ts'
 import { FILE_TOO_LARGE, isAbortError, POOLS_FAILED } from '../api/errors.ts'
-import type { PoolSummary } from '../api/types.ts'
+import type { PoolId, PoolSummary } from '../api/types.ts'
 import { exceedsPgnLimit, readPgnFile } from './pgnFile.ts'
 
 export type UploadPhase = 'loading' | 'ready' | 'failed'
 
 export function useUploadForm() {
   const [healthNotice, setHealthNotice] = useState<string | null>(null)
+  const [engineDown, setEngineDown] = useState(false)
   const [pools, setPools] = useState<PoolSummary[] | null>(null)
   const [poolsError, setPoolsError] = useState<string | null>(null)
   const [phase, setPhase] = useState<UploadPhase>('loading')
-  const [poolId, setPoolId] = useState<string | null>(null)
+  const [poolId, setPoolId] = useState<PoolId | null>(null)
   const [subject, setSubject] = useState('')
   const [pgn, setPgn] = useState('')
   const [fileName, setFileName] = useState<string | null>(null)
@@ -28,6 +29,7 @@ export function useUploadForm() {
       .then((result) => {
         if (controller.signal.aborted) return
         setHealthNotice(result.healthNotice)
+        setEngineDown(result.health?.engine === 'down')
         setPools(result.pools)
         setPoolsError(result.poolsError)
         setPhase(result.pools ? 'ready' : 'failed')
@@ -36,6 +38,7 @@ export function useUploadForm() {
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted || isAbortError(error)) return
+        setEngineDown(false)
         setPools(null)
         setPoolsError(POOLS_FAILED)
         setPhase('failed')
@@ -49,7 +52,7 @@ export function useUploadForm() {
   function selectPool(id: string) {
     const pool = pools?.find((item) => item.id === id)
     if (!pool?.available) return
-    setPoolId(id)
+    setPoolId(pool.id)
   }
 
   function editPgn(next: string) {
@@ -98,6 +101,7 @@ export function useUploadForm() {
 
   return {
     healthNotice,
+    engineDown,
     pools,
     poolsError,
     phase,

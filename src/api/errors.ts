@@ -18,6 +18,10 @@ export const FILE_TOO_LARGE = 'That file is over 2 MB.'
 
 export const ENGINE_DOWN = SENTENCES.engine_down
 
+export const CHECK_FAILED = 'The games could not be read. Reload the page and try again.'
+
+export const ESTIMATE_FAILED = 'The read could not be started. Try again.'
+
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
@@ -57,4 +61,9 @@ export function sentenceFor(body: unknown): string | null {
 export function errorCode(body: unknown): string {
   const fields = record(body)
   return fields && typeof fields.error === 'string' ? fields.error : ''
+}
+
+export function messageFrom(error: unknown, fallback: string): string {
+  if (error instanceof ApiError && error.message.trim()) return error.message
+  return fallback
 }
