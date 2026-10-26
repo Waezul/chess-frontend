@@ -98,38 +98,42 @@ a {
   opacity: 0.7;
 }
 
-.portrait {
+.site-header.site-header-overlay {
+  position: fixed;
+  z-index: 2;
+  inset: 0 0 auto;
+  border-bottom: 0;
+  background: transparent;
+}
+
+.room-landing {
+  background: transparent;
+}
+
+.room-landing main {
   position: relative;
-  display: flex;
-  align-items: center;
-  min-height: calc(100dvh - 3.25rem);
+  z-index: 1;
+}
+
+.stage {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
   animation: portrait-in 400ms ease both;
 }
 
-.portrait-canvas {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.portrait-canvas > div {
+.stage > :first-child {
   width: 100%;
   height: 100%;
 }
 
-.portrait::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    #090909 0%,
-    rgb(9 9 9 / 96%) 38%,
-    rgb(9 9 9 / 72%) 48%,
-    rgb(9 9 9 / 0%) 64%
-  );
+.portrait {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100dvh;
+  padding-top: calc(3.25rem + env(safe-area-inset-top));
 }
 
 .portrait-scrim {
@@ -163,7 +167,17 @@ a {
   line-height: 1.45;
 }
 
-/* rem follows the root font, so larger text widens this column before a word breaks. */
+@media (max-width: 47.99rem) {
+  .portrait-copy h1 {
+    max-width: min(100%, 52vw);
+    font-size: clamp(2rem, 8vw, 2.75rem);
+  }
+
+  .portrait-copy p {
+    max-width: min(100%, 52vw);
+  }
+}
+
 @media (max-width: 20rem) {
   .portrait-copy h1,
   .portrait-copy p {
@@ -196,20 +210,20 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .portrait {
+  .stage {
     animation: none;
   }
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .portrait::before {
-    background: linear-gradient(90deg, var(--bg) 0 46%, transparent 46%);
+  .site-header.site-header-overlay {
+    background: var(--bg);
   }
 }
 
 @media (prefers-contrast: more) {
-  .portrait::before {
-    background: linear-gradient(90deg, var(--bg) 0 42%, rgb(9 9 9 / 0%) 58%);
+  .site-header.site-header-overlay {
+    background: var(--bg);
   }
 }
 
@@ -222,39 +236,54 @@ a {
     border-bottom-color: CanvasText;
   }
 
-  .portrait::before {
-    background: none;
+  .site-header.site-header-overlay {
+    background: Canvas;
+    border-bottom: 1px solid CanvasText;
   }
 
   .portrait-copy {
     background: Canvas;
   }
 
-  .drop,
-  .field-input {
-    border-color: CanvasText;
-  }
-
   .field-error {
     color: CanvasText;
   }
 
+  .pool-list,
+  .field-input,
+  .drop {
+    border-color: CanvasText;
+    background: Canvas;
+    border-radius: 0;
+  }
+
   .pool-option input {
-    accent-color: auto;
+    appearance: auto;
+    background: ButtonFace;
+    forced-color-adjust: auto;
+  }
+
+  .pool-option:hover,
+  .field-input:hover,
+  .drop:hover {
+    background: Canvas;
   }
 }
 
 .upload {
   width: min(var(--column), 100%);
   padding: 1.75rem max(var(--page-pad), env(safe-area-inset-right))
-    max(3.5rem, env(safe-area-inset-bottom)) var(--page-pad);
-  border-top: 1px solid var(--line);
+    max(2.75rem, env(safe-area-inset-bottom)) var(--page-pad);
+}
+
+.upload-stack > * {
+  scroll-margin-top: calc(3.25rem + env(safe-area-inset-top) + 0.75rem);
 }
 
 .upload-stack {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.75rem;
   width: min(100%, 26.25rem);
   min-width: 0;
 }
@@ -269,7 +298,7 @@ a {
 .upload legend,
 .field-label {
   display: block;
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.5rem;
   padding: 0;
   color: var(--ink);
   font-size: 1.0625rem;
@@ -302,25 +331,66 @@ a {
   margin-top: 0.55rem;
 }
 
+.pool-list {
+  overflow: hidden;
+  border: 1px solid var(--field-edge);
+  border-radius: 10px;
+  background: var(--field);
+  scroll-margin-top: calc(3.25rem + env(safe-area-inset-top) + 0.75rem);
+}
+
 .pool-option {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  min-height: 44px;
-  padding: 0.55rem 0;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.9rem;
   cursor: pointer;
 }
 
 .pool-option + .pool-option {
-  margin-top: 0.15rem;
+  background-image: linear-gradient(color-mix(in srgb, var(--ink) 16%, transparent), color-mix(in srgb, var(--ink) 16%, transparent));
+  background-repeat: no-repeat;
+  background-position: right top;
+  background-size: calc(100% - 2.9rem) 1px;
 }
 
 .pool-option input {
   width: 1.25rem;
   height: 1.25rem;
-  margin: 0.15rem 0 0;
-  accent-color: var(--ink);
+  margin: 0.1rem 0 0;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: transparent;
   flex: none;
+  appearance: none;
+}
+
+.pool-option input:checked {
+  background: radial-gradient(circle, var(--ink) 0 4px, var(--field) 4.5px);
+}
+
+.pool-option input:disabled {
+  border-color: var(--ink-faint);
+}
+
+.pool-option input:focus {
+  outline: none;
+}
+
+.pool-option:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .pool-option:hover {
+    background-color: color-mix(in srgb, var(--ink) 6%, transparent);
+  }
+
+  .pool-option.is-unavailable:hover {
+    background-color: transparent;
+  }
 }
 
 .pool-option.is-unavailable {
@@ -346,36 +416,59 @@ a {
 .field-input,
 .field-area {
   margin: 0;
-  border-radius: 0;
   background: transparent;
   color: var(--ink);
   caret-color: var(--ink);
   font: inherit;
 }
 
+.field-input,
+.drop {
+  border: 1px solid var(--field-edge);
+  border-radius: 10px;
+  background: var(--field);
+  scroll-margin-top: calc(3.25rem + env(safe-area-inset-top) + 0.75rem);
+}
+
 .field-input {
   display: block;
   width: 100%;
-  min-height: 44px;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid var(--line);
+  min-height: 2.75rem;
+  padding: 0.6rem 0.9rem;
 }
 
-.field-input:-webkit-autofill {
+.field-input:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.field-input:-webkit-autofill,
+.field-input:autofill {
+  border-radius: 10px;
   -webkit-text-fill-color: var(--ink);
   caret-color: var(--ink);
-  box-shadow: 0 0 0 1000px var(--bg) inset;
+  box-shadow: 0 0 0 1000px var(--field) inset;
 }
 
 .drop {
-  padding: 0.75rem;
-  border: 1px solid var(--line);
+  padding: 0.85rem 0.9rem 0.35rem;
 }
 
 .drop.is-over,
-.drop:focus-within,
-.field-input:focus {
-  border-color: var(--ink);
+.drop:has(.field-area:focus) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.field-area:focus {
+  outline: none;
+}
+
+@media (hover: hover) {
+  .field-input:hover,
+  .drop:hover {
+    background: color-mix(in srgb, var(--ink) 5%, var(--field));
+  }
 }
 
 .field-area {

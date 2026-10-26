@@ -15,13 +15,13 @@ export function LandingPage() {
     })) ?? []
 
   return (
-    <div className="room">
-      <SiteHeader />
+    <div className="room room-landing">
+      <SiteHeader overlay />
+      <div className="stage" aria-hidden="true" inert>
+        <QueenPortrait />
+      </div>
       <main>
         <section className="portrait">
-          <div className="portrait-canvas" aria-hidden="true">
-            <QueenPortrait />
-          </div>
           <div className="portrait-scrim">
             <div className="portrait-copy">
               <h1>Get your Elo guessed.</h1>

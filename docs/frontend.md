@@ -29,6 +29,8 @@ Build `/` as one column, in this order.
 7. Result. Renders under the form when the job is `done`. A new check clears it.
 8. Failure. One sentence under the button. The checklist stays.
 
+The name row can load that player's latest rated games from Lichess and write them into the PGN field. The subject becomes the username. [plan.md](plan.md) specifies the request, the 30-game cap, and the optional Lichess login. The check and the estimate still post the same `pgn` and `subject`. This client calls Lichess. The Queen's Range API does not.
+
 `/method` is a separate page for the selected pool, linked from the result footer and from the header.
 
 ## What the result shows
