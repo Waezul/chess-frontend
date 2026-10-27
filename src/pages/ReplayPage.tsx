@@ -11,8 +11,14 @@ import { watchLimit, watchedIndexes } from '../upload/scoreSheet.ts'
 export function ReplayPage() {
   const { form, sheet, selected } = useUpload()
   const indexes = useMemo(
-    () => watchedIndexes(sheet.games, sheet.ticked, watchLimit(selected?.games_required ?? null)),
-    [selected?.games_required, sheet.games, sheet.ticked],
+    () =>
+      watchedIndexes(
+        sheet.games,
+        sheet.ticked,
+        watchLimit(selected?.games_required ?? null),
+        sheet.shownCount,
+      ),
+    [selected?.games_required, sheet.games, sheet.shownCount, sheet.ticked],
   )
   const indexKey = indexes.join(',')
   const [reel, setReel] = useState<{ games: ReplayGame[]; source: string } | null>(null)

@@ -19,12 +19,12 @@ import { parsePgnReel, positionAt } from './pgnReel.ts'
 import { StauntonSet } from './pieces.tsx'
 import type { PlacedPiece, ReplayGame } from './types.ts'
 
-const ROOM = '#212325'
+const ROOM = '#202223'
 const BOUNDS = boardBounds()
 
 const PORTRAIT_SHOT = {
   wide: { fov: 27, position: [-0.05, 0.88, 4.55] as const, look: [0.22, 0.52, 0] as const },
-  narrow: { fov: 32, position: [-0.15, 1.05, 5.9] as const, look: [0.16, 0.42, 0] as const },
+  narrow: { fov: 31, position: [-0.95, 1.08, 5.75] as const, look: [0.02, 0.62, 0] as const },
 }
 
 const TABLE_SHOT = {

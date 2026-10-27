@@ -22,35 +22,38 @@ export function NameField({ subject, canLoad, loading, notice, onSubject, onLoad
       <label className="field-label" htmlFor="subject">
         Username you played under
       </label>
-      <input
-        id="subject"
-        className="field-input"
-        name="subject"
-        value={subject}
-        autoComplete="off"
-        autoCapitalize="off"
-        spellCheck={false}
-        aria-describedby={notice ? noteId : undefined}
+      <div className="name-box">
+        <input
+          id="subject"
+          className="field-input"
+          name="subject"
+          value={subject}
+          autoComplete="off"
+          autoCapitalize="off"
+          spellCheck={false}
+        aria-describedby={!loading && notice ? noteId : undefined}
         onChange={(event) => onSubject(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key !== 'Enter' || event.nativeEvent.isComposing || !canLoad) return
-          event.preventDefault()
-          onLoad()
-        }}
-      />
-      <div className="name-actions">
-        <button
-          type="button"
-          className="text-button"
-          disabled={!canLoad}
-          aria-busy={loading ? true : undefined}
-          aria-describedby={notice ? noteId : undefined}
-          onClick={onLoad}
-        >
-          Load latest rated games
-        </button>
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter' || event.nativeEvent.isComposing || !canLoad) return
+            event.preventDefault()
+            onLoad()
+          }}
+        />
+        <div className="name-actions">
+          <button
+            type="button"
+            className={loading ? 'text-button is-loading' : 'text-button'}
+            disabled={!canLoad || loading}
+            aria-busy={loading ? true : undefined}
+            aria-label={loading ? 'Loading games from Lichess.' : undefined}
+            aria-describedby={!loading && notice ? noteId : undefined}
+            onClick={onLoad}
+          >
+            {loading ? <span className="spinner" aria-hidden="true" /> : 'Load latest rated games'}
+          </button>
+        </div>
       </div>
-      {notice?.tone === 'status' ? (
+      {notice?.tone === 'status' && !loading ? (
         <p id={noteId} className="field-status" role="status">
           {notice.text}
         </p>

@@ -86,10 +86,11 @@ export function watchedIndexes(
   games: readonly CheckedGame[],
   ticked: readonly number[],
   limit = WATCH_GAME_LIMIT,
+  shownLimit = SHOWN_GAME_LIMIT,
 ): number[] {
   const chosen = new Set(tickedIndexes(games, ticked))
   const indexes: number[] = []
-  for (const game of shownGames(games)) {
+  for (const game of shownGames(games, shownLimit)) {
     if (!chosen.has(game.index)) continue
     indexes.push(game.index)
     if (indexes.length >= limit) break

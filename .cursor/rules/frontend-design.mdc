@@ -1,0 +1,17 @@
+---
+description: Queen's Range visual design. Follow docs/design.md when changing UI, color, type, or the 3D board.
+globs: src/**/*.{tsx,css,html}
+alwaysApply: false
+---
+
+# Frontend design
+
+Read `docs/design.md` before changing the interface. Tokens live in `src/styles/tokens.css`.
+
+- Charcoal room `#202223`, ivory text `#f1efe8`, one brass accent `#d0b27a`.
+- Brass is only for selection, keyboard focus, progress, and the primary action.
+- `--line` divides. `--field-edge` outlines controls. Disabled text stays at full opacity.
+- Sentence case. Schibsted Grotesk. Hit targets are at least 44px.
+- A mouse click must not leave the brass focus ring. Keyboard focus keeps it.
+- Keep the Staunton set, the two-grey board, and the current lighting. No wood grain, file labels, or orbit controls.
+- Show only real PGN or API data. Do not invent ratings, accuracy, or charts.
