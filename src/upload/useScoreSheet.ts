@@ -12,6 +12,7 @@ type UseScoreSheetInput = {
   pgn: string
   subject: string
   engineDown: boolean
+  holdCheck: boolean
 }
 
 type CheckSnapshot = {
@@ -20,7 +21,14 @@ type CheckSnapshot = {
   subject: string
 }
 
-export function useScoreSheet({ poolId, gamesRequired, pgn, subject, engineDown }: UseScoreSheetInput) {
+export function useScoreSheet({
+  poolId,
+  gamesRequired,
+  pgn,
+  subject,
+  engineDown,
+  holdCheck,
+}: UseScoreSheetInput) {
   const [phase, setPhase] = useState<SheetPhase>('idle')
   const [games, setGames] = useState<CheckedGame[]>([])
   const [ticked, setTicked] = useState<number[]>([])
@@ -31,6 +39,9 @@ export function useScoreSheet({ poolId, gamesRequired, pgn, subject, engineDown 
 
   const latest = useRef({ poolId, pgn, subject })
   latest.current = { poolId, pgn, subject }
+  const handledRef = useRef<CheckedSnapshot | null>(null)
+  const holdRef = useRef(holdCheck)
+  holdRef.current = holdCheck
   const generation = useRef(0)
   const timer = useRef<number | null>(null)
   const inflight = useRef<AbortController | null>(null)
@@ -55,6 +66,7 @@ export function useScoreSheet({ poolId, gamesRequired, pgn, subject, engineDown 
     setPhase(next)
     setGames([])
     setTicked([])
+    handledRef.current = null
     setChecked(null)
     setCheckError(null)
     setSubmitError(null)
@@ -67,13 +79,16 @@ export function useScoreSheet({ poolId, gamesRequired, pgn, subject, engineDown 
         signal,
       )
       if (id !== generation.current || signal.aborted) return
+      const settled = { pool: snapshot.poolId, pgn: snapshot.pgn, subject: snapshot.subject }
+      handledRef.current = settled
       setGames(result.games)
-      setChecked({ pool: snapshot.poolId, pgn: snapshot.pgn, subject: snapshot.subject })
+      setChecked(settled)
       setCheckError(null)
       setPhase('ready')
     } catch (error) {
       if (signal.aborted || isAbortError(error)) return
       if (id !== generation.current) return
+      handledRef.current = { pool: snapshot.poolId, pgn: snapshot.pgn, subject: snapshot.subject }
       setGames([])
       setChecked(null)
       setCheckError(messageFrom(error, CHECK_FAILED))
@@ -99,6 +114,42 @@ export function useScoreSheet({ poolId, gamesRequired, pgn, subject, engineDown 
   }, [])
 
   useEffect(() => {
+    if (holdCheck) {
+      // The load is the next paste. Skip games:check until it lands or fails.
+      stopInFlight()
+      setPhase((current) => (current === 'checking' ? 'idle' : current))
+      return
+    }
+
+    const handled = handledRef.current
+    const textSame = handled !== null && handled.pgn === pgn && handled.subject === subject
+    const poolSame = handled !== null && handled.pool === poolId
+    if (textSame && poolSame) return
+
+    if (textSame && !poolSame) {
+      const plan = nextCheck({
+        hasPool: poolId !== null,
+        hasPaste: pgn.trim().length > 0,
+        hasSubject: subject.trim().length > 0,
+        trigger: 'pool',
+      })
+      if (plan !== 'now' || !poolId) {
+        if (poolId && pgn.trim()) {
+          stopInFlight()
+          resetSheet('idle')
+        }
+        return
+      }
+      stopInFlight()
+      resetSheet('checking')
+      const controller = startNow({ poolId, pgn, subject })
+      return () => {
+        controller.abort()
+        if (inflight.current === controller) inflight.current = null
+        generation.current += 1
+      }
+    }
+
     const plan = nextCheck({
       hasPool: poolId !== null,
       hasPaste: pgn.trim().length > 0,
@@ -129,9 +180,10 @@ export function useScoreSheet({ poolId, gamesRequired, pgn, subject, engineDown 
     }
     // resetSheet and stopInFlight close over stable setters and refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pgn, subject])
+  }, [pgn, subject, holdCheck])
 
   useEffect(() => {
+    if (holdRef.current) return
     const current = latest.current
     const plan = nextCheck({
       hasPool: current.poolId !== null,

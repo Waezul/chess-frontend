@@ -1,5 +1,6 @@
 import { QueenPortrait } from '../board/QueenPortrait.tsx'
 import { EstimateControl } from '../components/EstimateControl.tsx'
+import { NameField } from '../components/NameField.tsx'
 import { PgnField } from '../components/PgnField.tsx'
 import { PoolPicker } from '../components/PoolPicker.tsx'
 import { ScoreSheet } from '../components/ScoreSheet.tsx'
@@ -16,6 +17,7 @@ export function LandingPage() {
     pgn: form.pgn,
     subject: form.subject,
     engineDown: form.engineDown,
+    holdCheck: form.lichessLoading,
   })
   const options =
     form.pools?.map((pool) => ({
@@ -56,21 +58,14 @@ export function LandingPage() {
               selectedId={form.poolId}
               onSelect={form.selectPool}
             />
-            <div className="field">
-              <label className="field-label" htmlFor="subject">
-                Username you played under
-              </label>
-              <input
-                id="subject"
-                className="field-input"
-                name="subject"
-                value={form.subject}
-                onChange={(event) => form.setSubject(event.target.value)}
-                autoComplete="off"
-                autoCapitalize="off"
-                spellCheck={false}
-              />
-            </div>
+            <NameField
+              subject={form.subject}
+              canLoad={form.canLoadLichess}
+              loading={form.lichessLoading}
+              notice={form.lichessNotice}
+              onSubject={form.setSubject}
+              onLoad={form.loadLichess}
+            />
             <PgnField
               fileName={form.fileName}
               fileBytes={form.fileBytes}
