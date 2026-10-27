@@ -1,4 +1,8 @@
-import { QueenPortrait } from '../board/QueenPortrait.tsx'
+import { useMemo, useState } from 'react'
+import { ChessStage } from '../board/ChessStage.tsx'
+import { parsePgnReel } from '../board/pgnReel.ts'
+import type { ReelCue } from '../board/types.ts'
+import { useReducedMotion } from '../board/useReducedMotion.ts'
 import { EstimateControl } from '../components/EstimateControl.tsx'
 import { NameField } from '../components/NameField.tsx'
 import { PgnField } from '../components/PgnField.tsx'
@@ -26,17 +30,39 @@ export function LandingPage() {
       available: pool.available,
       unavailableReason: pool.unavailable_reason,
     })) ?? []
+  const games = useMemo(() => parsePgnReel(form.pgn), [form.pgn])
+  const reduced = useReducedMotion()
+  const [armed, setArmed] = useState(false)
+  const [pausedPgn, setPausedPgn] = useState<string | null>(null)
+  const [cue, setCue] = useState<ReelCue | null>(null)
+  if (armed && games.length === 0) setArmed(false)
+  const unplayable = form.pgn.trim().length > 0 && games.length === 0
+  const playing = armed && games.length > 0
+  const paused = pausedPgn === form.pgn
+
+  function startWatch() {
+    if (games.length === 0) return
+    setArmed(true)
+    setPausedPgn(null)
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
+  }
 
   return (
-    <div className="room room-landing">
+    <div className={playing ? 'room room-landing room-watching' : 'room room-landing'}>
       <SiteHeader overlay />
       <div className="stage" aria-hidden="true" inert>
-        <QueenPortrait />
+        <ChessStage
+          pgn={form.pgn}
+          watching={playing}
+          paused={paused}
+          reduced={reduced}
+          onCue={setCue}
+        />
       </div>
       <main>
         <section className="portrait">
           <div className="portrait-scrim">
-            <div className="portrait-copy">
+            <div className="portrait-copy" aria-hidden={playing ? true : undefined}>
               <h1>Get your Elo guessed.</h1>
               <p>
                 Our model will guess your Elo. The 10–90% band is the low and high of that guess, not
@@ -44,6 +70,22 @@ export function LandingPage() {
               </p>
             </div>
           </div>
+          {playing && cue ? (
+            <div className="replay-readout">
+              <div className="replay-lines" aria-live="polite">
+                <p className="replay-game">{cue.label}</p>
+                {cue.san ? <p className="replay-san">{cue.san}</p> : null}
+                <p className="replay-turn">{cue.turn}</p>
+              </div>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => setPausedPgn(paused ? null : form.pgn)}
+              >
+                {paused ? 'Play replay' : 'Pause replay'}
+              </button>
+            </div>
+          ) : null}
         </section>
         <form
           className="upload"
@@ -73,6 +115,11 @@ export function LandingPage() {
               onFile={form.chooseFile}
               onRemove={form.removeFile}
             />
+            {unplayable ? (
+              <p className="hint replay-note" role="status">
+                This PGN has no playable game.
+              </p>
+            ) : null}
             <ScoreSheet
               phase={sheet.phase}
               games={sheet.games}
@@ -81,6 +128,13 @@ export function LandingPage() {
               poolLabel={selected?.label ?? ''}
               onToggle={sheet.toggle}
             />
+            {games.length > 0 && !playing ? (
+              <div className="watch-row">
+                <button type="button" className="text-button" onClick={startWatch}>
+                  {games.length === 1 ? 'Watch the game' : 'Watch the games'}
+                </button>
+              </div>
+            ) : null}
             <EstimateControl
               gamesRequired={selected?.games_required ?? null}
               enabled={sheet.canEstimate}
@@ -89,6 +143,7 @@ export function LandingPage() {
               checkError={sheet.checkError}
               submitError={sheet.submitError}
               onEstimate={() => {
+                if (games.length > 0) startWatch()
                 void sheet.submit()
               }}
             />

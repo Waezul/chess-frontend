@@ -38,22 +38,30 @@ function turned(sections: ProfilePoint[][]): ProfilePoint[] {
   return sections.flatMap((section) => catmull(section, 6))
 }
 
+function profile(sections: ProfilePoint[][]): Vector2[] {
+  return turned(sections).map(([radius, height]) => new Vector2(radius, height))
+}
+
+const FOOT: ProfilePoint[] = [
+  [0, 0],
+  [0.3, 0],
+  [0.348, 0.016],
+  [0.352, 0.04],
+  [0.31, 0.058],
+  [0.24, 0.078],
+]
+
+const COLLAR: ProfilePoint[] = [
+  [0.24, 0.078],
+  [0.205, 0.092],
+  [0.242, 0.112],
+  [0.248, 0.132],
+  [0.19, 0.15],
+]
+
 const QUEEN_SECTIONS: ProfilePoint[][] = [
-  [
-    [0, 0],
-    [0.3, 0],
-    [0.348, 0.016],
-    [0.352, 0.04],
-    [0.31, 0.058],
-    [0.24, 0.078],
-  ],
-  [
-    [0.24, 0.078],
-    [0.205, 0.092],
-    [0.242, 0.112],
-    [0.248, 0.132],
-    [0.19, 0.15],
-  ],
+  FOOT,
+  COLLAR,
   [
     [0.19, 0.15],
     [0.128, 0.2],
@@ -91,6 +99,105 @@ const QUEEN_SECTIONS: ProfilePoint[][] = [
   ],
 ]
 
+const PAWN_SECTIONS: ProfilePoint[][] = [
+  FOOT,
+  COLLAR,
+  [
+    [0.19, 0.15],
+    [0.12, 0.22],
+    [0.078, 0.36],
+    [0.07, 0.5],
+    [0.086, 0.58],
+  ],
+  [
+    [0.086, 0.58],
+    [0.13, 0.63],
+    [0.15, 0.68],
+    [0.11, 0.73],
+  ],
+]
+
+const ROOK_SECTIONS: ProfilePoint[][] = [
+  FOOT,
+  COLLAR,
+  [
+    [0.19, 0.15],
+    [0.15, 0.26],
+    [0.142, 0.48],
+    [0.158, 0.72],
+    [0.186, 0.9],
+    [0.21, 1.0],
+  ],
+  [
+    [0.21, 1.0],
+    [0.238, 1.04],
+    [0.232, 1.12],
+    [0.22, 1.15],
+  ],
+]
+
+const BISHOP_SECTIONS: ProfilePoint[][] = [
+  FOOT,
+  COLLAR,
+  [
+    [0.19, 0.15],
+    [0.114, 0.28],
+    [0.086, 0.5],
+    [0.084, 0.68],
+    [0.112, 0.8],
+    [0.15, 0.88],
+  ],
+  [
+    [0.15, 0.88],
+    [0.188, 0.92],
+    [0.15, 0.96],
+    [0.128, 1.02],
+  ],
+  [
+    [0.128, 1.02],
+    [0.168, 1.1],
+    [0.198, 1.2],
+    [0.17, 1.32],
+    [0.09, 1.44],
+    [0.028, 1.52],
+    [0.01, 1.55],
+  ],
+]
+
+function tallerStem(sections: ProfilePoint[][], top: number): ProfilePoint[][] {
+  const sourceTop = 1.73
+  const collar = 0.15
+  const factor = (top - collar) / (sourceTop - collar)
+  return sections.map((section) =>
+    section.map(([radius, height]) => {
+      if (height <= collar) return [radius, height] as const
+      return [radius, collar + (height - collar) * factor] as const
+    }),
+  )
+}
+
+const KING_SECTIONS = tallerStem(QUEEN_SECTIONS, 1.88)
+
 export function createQueenProfile(): Vector2[] {
-  return turned(QUEEN_SECTIONS).map(([radius, height]) => new Vector2(radius, height))
+  return profile(QUEEN_SECTIONS)
+}
+
+export function createPawnProfile(): Vector2[] {
+  return profile(PAWN_SECTIONS)
+}
+
+export function createRookProfile(): Vector2[] {
+  return profile(ROOK_SECTIONS)
+}
+
+export function createBishopProfile(): Vector2[] {
+  return profile(BISHOP_SECTIONS)
+}
+
+export function createKingProfile(): Vector2[] {
+  return profile(KING_SECTIONS)
+}
+
+export function createFootProfile(): Vector2[] {
+  return profile([FOOT, COLLAR])
 }
