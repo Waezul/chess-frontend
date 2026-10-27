@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { loadLanding } from '../api/client.ts'
 import { FILE_TOO_LARGE, isAbortError, POOLS_FAILED } from '../api/errors.ts'
 import type { PoolId, PoolSummary } from '../api/types.ts'
+import {
+  isLichessPool,
+  LICHESS_LOADING,
+  LICHESS_UNREACHABLE,
+  loadRatedGames,
+  type LichessPool,
+} from '../lichess/games.ts'
 import { exceedsPgnLimit, readPgnFile } from './pgnFile.ts'
 
 export type UploadPhase = 'loading' | 'ready' | 'failed'
@@ -18,9 +25,13 @@ export function useUploadForm() {
   const [fileName, setFileName] = useState<string | null>(null)
   const [fileBytes, setFileBytes] = useState<number | null>(null)
   const [pgnError, setPgnError] = useState<string | null>(null)
+  const [lichessLoading, setLichessLoading] = useState(false)
+  const [lichessError, setLichessError] = useState<string | null>(null)
   const fileText = useRef<string | null>(null)
   const readId = useRef(0)
   const alive = useRef(true)
+  const lichessPaste = useRef(false)
+  const lichessAbort = useRef<AbortController | null>(null)
 
   useEffect(() => {
     alive.current = true
@@ -46,21 +57,42 @@ export function useUploadForm() {
     return () => {
       alive.current = false
       controller.abort()
+      lichessAbort.current?.abort()
     }
   }, [])
 
+  function cancelLichess() {
+    readId.current += 1
+    lichessAbort.current?.abort()
+    lichessAbort.current = null
+    setLichessLoading(false)
+  }
+
   function selectPool(id: string) {
     const pool = pools?.find((item) => item.id === id)
-    if (!pool?.available) return
+    if (!pool?.available || pool.id === poolId) return
+    const reload = lichessPaste.current || lichessLoading
     setPoolId(pool.id)
+    if (!reload) return
+    const name = subject.trim()
+    if (name && isLichessPool(pool.id)) {
+      void startLoad(name, pool.id)
+      return
+    }
+    if (lichessLoading) cancelLichess()
   }
 
   function editPgn(next: string) {
     readId.current += 1
+    lichessAbort.current?.abort()
+    lichessAbort.current = null
+    setLichessLoading(false)
     if (exceedsPgnLimit(next)) {
       setPgnError(FILE_TOO_LARGE)
       return
     }
+    lichessPaste.current = false
+    setLichessError(null)
     setPgn(next)
     setPgnError(null)
     if (fileText.current !== null && next !== fileText.current) {
@@ -71,8 +103,10 @@ export function useUploadForm() {
   }
 
   function removeFile() {
-    readId.current += 1
+    cancelLichess()
+    lichessPaste.current = false
     fileText.current = null
+    setLichessError(null)
     setPgn('')
     setFileName(null)
     setFileBytes(null)
@@ -81,6 +115,10 @@ export function useUploadForm() {
 
   async function chooseFile(file: File) {
     const id = ++readId.current
+    lichessAbort.current?.abort()
+    lichessAbort.current = null
+    lichessPaste.current = false
+    setLichessLoading(false)
     try {
       const result = await readPgnFile(file)
       if (!alive.current || id !== readId.current) return
@@ -88,6 +126,8 @@ export function useUploadForm() {
         setPgnError(FILE_TOO_LARGE)
         return
       }
+      lichessPaste.current = false
+      setLichessError(null)
       fileText.current = result.text
       setPgn(result.text)
       setFileName(result.name)
@@ -97,6 +137,45 @@ export function useUploadForm() {
       if (!alive.current || id !== readId.current) return
       setPgnError('That file could not be read. Choose another.')
     }
+  }
+
+  async function startLoad(username: string, pool: LichessPool) {
+    const id = ++readId.current
+    lichessAbort.current?.abort()
+    const controller = new AbortController()
+    lichessAbort.current = controller
+    setLichessLoading(true)
+    setLichessError(null)
+    try {
+      const result = await loadRatedGames(username, pool, controller.signal)
+      if (!alive.current || id !== readId.current) return
+      if (!result.ok) {
+        setLichessLoading(false)
+        setLichessError(result.message)
+        return
+      }
+      lichessPaste.current = true
+      fileText.current = null
+      setFileName(null)
+      setFileBytes(null)
+      setPgnError(null)
+      setLichessLoading(false)
+      setSubject(result.username)
+      setPgn(result.pgn)
+    } catch (error) {
+      if (!alive.current || id !== readId.current || isAbortError(error)) return
+      setLichessLoading(false)
+      setLichessError(LICHESS_UNREACHABLE)
+    }
+  }
+
+  function loadLichess() {
+    if (!poolId || !isLichessPool(poolId)) return
+    const username = subject.trim()
+    if (!username) return
+    const selected = pools?.find((pool) => pool.id === poolId)
+    if (!selected?.available) return
+    void startLoad(username, poolId)
   }
 
   return {
@@ -116,5 +195,16 @@ export function useUploadForm() {
     pgnError,
     chooseFile,
     removeFile,
+    lichessLoading,
+    lichessNotice: (lichessLoading
+      ? { tone: 'status' as const, text: LICHESS_LOADING }
+      : lichessError
+        ? { tone: 'error' as const, text: lichessError }
+        : null),
+    canLoadLichess:
+      subject.trim().length > 0 &&
+      isLichessPool(poolId) &&
+      (pools?.some((pool) => pool.id === poolId && pool.available) ?? false),
+    loadLichess,
   }
 }

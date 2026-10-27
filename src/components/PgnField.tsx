@@ -117,7 +117,7 @@ export function PgnField({ fileName, fileBytes, error, onFile, onRemove }: PgnFi
         )}
       </div>
       <p id={hintId} className="hint">
-        A PGN is the text record of the games. Lichess can export one.
+        A PGN is the text record of the games. Load your latest rated games, or drop a file.
       </p>
       {error ? (
         <p id={errorId} className="field-error" role="alert">
