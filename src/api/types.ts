@@ -63,3 +63,8 @@ export type StartedJob = {
   id: string
   status: 'queued' | 'running'
 }
+
+export type PolledJob =
+  | { id: string; status: 'queued' | 'running' }
+  | { id: string; status: 'done' }
+  | { id: string; status: 'failed'; message: string }

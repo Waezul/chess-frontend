@@ -1,28 +1,51 @@
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
+import { readingLabel } from '../upload/estimatePoll.ts'
 
 type EstimateControlProps = {
   gamesRequired: number | null
   enabled: boolean
   submitting: boolean
+  reading: boolean
+  depth: number | null
   healthNotice: string | null
   checkError: string | null
   submitError: string | null
   onEstimate: () => void
+  onCancel: () => void
 }
 
 export function EstimateControl({
   gamesRequired,
   enabled,
   submitting,
+  reading,
+  depth,
   healthNotice,
   checkError,
   submitError,
   onEstimate,
+  onCancel,
 }: EstimateControlProps) {
   const healthId = useId()
   const checkId = useId()
   const submitId = useId()
-  if (gamesRequired == null && !healthNotice && !checkError && !submitError) return null
+  const cancelRef = useRef<HTMLButtonElement>(null)
+  const estimateRef = useRef<HTMLButtonElement>(null)
+  const returnFocus = useRef(false)
+  const waitCopy = reading && depth != null && Number.isFinite(depth) ? readingLabel(depth) : null
+
+  useEffect(() => {
+    if (waitCopy) {
+      returnFocus.current = true
+      cancelRef.current?.focus({ preventScroll: true })
+      return
+    }
+    if (!returnFocus.current) return
+    returnFocus.current = false
+    estimateRef.current?.focus({ preventScroll: true })
+  }, [waitCopy])
+
+  if (gamesRequired == null && !healthNotice && !checkError && !submitError && !waitCopy) return null
 
   const describedBy = [
     healthNotice ? healthId : '',
@@ -34,8 +57,18 @@ export function EstimateControl({
 
   return (
     <div className="estimate-block">
-      {gamesRequired != null ? (
+      {waitCopy ? (
+        <div className="estimate-status">
+          <p className="estimate-wait" role="status">
+            {waitCopy}
+          </p>
+          <button ref={cancelRef} type="button" className="text-button" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+      ) : gamesRequired != null ? (
         <button
+          ref={estimateRef}
           type="button"
           className="estimate"
           disabled={!enabled}
