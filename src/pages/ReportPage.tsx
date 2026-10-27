@@ -1,15 +1,12 @@
-import { useParams } from 'react-router-dom'
 import { SiteHeader } from '../components/SiteHeader.tsx'
 
 export function ReportPage() {
-  const { id } = useParams()
-
   return (
     <div className="room">
       <SiteHeader />
       <main className="page">
         <h1>Report</h1>
-        <p>{id}</p>
+        <p>A finished read shows the estimated rating here. Nothing has been loaded for this page.</p>
       </main>
     </div>
   )

@@ -110,14 +110,14 @@ export function PgnField({ fileName, fileBytes, error, onFile, onRemove }: PgnFi
           </>
         ) : (
           <div className="drop-choose">
-            <p className="drop-title">Drop a PGN file</p>
-            <p className="drop-aside">or choose one</p>
+            <p className="drop-title">Drop your PGN file here.</p>
+            <p className="drop-aside">or browse for a file</p>
             {fileInput('drop-input')}
           </div>
         )}
       </div>
       <p id={hintId} className="hint">
-        A PGN is the text record of the games. Load your latest rated games, or drop a file.
+        A PGN is the text record of the games.
       </p>
       {error ? (
         <p id={errorId} className="field-error" role="alert">

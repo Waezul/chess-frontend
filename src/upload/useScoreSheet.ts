@@ -6,6 +6,7 @@ import {
   canEstimate,
   firstAcceptedIndexes,
   nextCheck,
+  SHOWN_GAME_LIMIT,
   shownGames,
   tickedIndexes,
   watchLimit,
@@ -44,6 +45,7 @@ export function useScoreSheet({
   const [checkError, setCheckError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [shownCount, setShownCount] = useState(SHOWN_GAME_LIMIT)
 
   const latest = useRef({ poolId, pgn, subject })
   latest.current = { poolId, pgn, subject }
@@ -74,6 +76,7 @@ export function useScoreSheet({
     setPhase(next)
     setGames([])
     setTicked([])
+    setShownCount(SHOWN_GAME_LIMIT)
     handledRef.current = null
     setChecked(null)
     setCheckError(null)
@@ -218,8 +221,12 @@ export function useScoreSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [poolId])
 
+  function showMore() {
+    setShownCount((count) => count + SHOWN_GAME_LIMIT)
+  }
+
   function toggle(index: number) {
-    const visible = shownGames(games)
+    const visible = shownGames(games, shownCount)
     const game = visible.find((item) => item.index === index)
     if (!game?.accepted) return
     setTicked((current) => {
@@ -232,7 +239,7 @@ export function useScoreSheet({
   }
 
   function selectFirst() {
-    setTicked(firstAcceptedIndexes(shownGames(games), watchLimit(gamesRequired)))
+    setTicked(firstAcceptedIndexes(shownGames(games, shownCount), watchLimit(gamesRequired)))
   }
 
   const ready = canEstimate({
@@ -301,6 +308,8 @@ export function useScoreSheet({
     submitError,
     submitting,
     canEstimate: ready,
+    shownCount,
+    showMore,
     toggle,
     selectFirst,
     submit,

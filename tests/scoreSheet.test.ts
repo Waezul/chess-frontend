@@ -53,4 +53,7 @@ test('the watched list is the selected games, and never more than eight', () => 
   const ticked = games.map((item) => item.index)
   assert.deepEqual(watchedIndexes(games, ticked), [0, 1, 2, 3, 4, 5, 6, 7])
   assert.deepEqual(watchedIndexes(games, [3, 9, 1]), [1, 3, 9])
+  assert.equal(shownGames(games, 20).length, 14)
+  assert.deepEqual(watchedIndexes(games, [12], 8, 20), [12])
+  assert.deepEqual(watchedIndexes(games, [12], 8, 10), [])
 })

@@ -1,4 +1,12 @@
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+
+const POINTER_LINKS = '.wordmark, .method-link, .back-link'
+
+function linkFromEvent(event: Event) {
+  if (!(event.target instanceof Element)) return null
+  return event.target.closest(POINTER_LINKS)
+}
 
 type SiteHeaderProps = {
   overlay?: boolean
@@ -8,6 +16,40 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ overlay = false, backTo, backLabel }: SiteHeaderProps) {
   const { pathname } = useLocation()
+
+  useEffect(() => {
+    let pointer = false
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) return
+      pointer = true
+      linkFromEvent(event)?.setAttribute('data-pointer-focus', '')
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      pointer = false
+      document.querySelectorAll('[data-pointer-focus]').forEach((node) => {
+        node.removeAttribute('data-pointer-focus')
+      })
+    }
+
+    const onFocusIn = (event: FocusEvent) => {
+      const link = linkFromEvent(event)
+      if (!link) return
+      if (pointer) link.setAttribute('data-pointer-focus', '')
+      else link.removeAttribute('data-pointer-focus')
+    }
+
+    document.addEventListener('pointerdown', onPointerDown, true)
+    document.addEventListener('keydown', onKeyDown, true)
+    document.addEventListener('focusin', onFocusIn, true)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true)
+      document.removeEventListener('keydown', onKeyDown, true)
+      document.removeEventListener('focusin', onFocusIn, true)
+    }
+  }, [])
 
   return (
     <header className={overlay ? 'site-header site-header-overlay' : 'site-header'}>

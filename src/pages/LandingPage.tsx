@@ -24,8 +24,14 @@ export function LandingPage() {
     })) ?? []
   const games = useMemo(() => parsePgnReel(form.pgn), [form.pgn])
   const watched = useMemo(
-    () => watchedIndexes(sheet.games, sheet.ticked, watchLimit(selected?.games_required ?? null)),
-    [selected?.games_required, sheet.games, sheet.ticked],
+    () =>
+      watchedIndexes(
+        sheet.games,
+        sheet.ticked,
+        watchLimit(selected?.games_required ?? null),
+        sheet.shownCount,
+      ),
+    [selected?.games_required, sheet.games, sheet.shownCount, sheet.ticked],
   )
   const reduced = useReducedMotion()
   const [creating, setCreating] = useState(false)
@@ -50,10 +56,14 @@ export function LandingPage() {
         <section className="portrait">
           <div className="portrait-scrim">
             <div className="portrait-copy">
-              <h1>Get your Elo guessed.</h1>
+              <h1>
+                Get your Elo
+                <br />
+                guessed.
+              </h1>
               <p>
-                Our model will guess your Elo. The 10–90% band is the low and high of that guess, not
-                how sure the model is.
+                Upload your games. Discover your estimated playing strength. The 10–90% band is the low
+                and high of that guess, not how sure the model is.
               </p>
             </div>
           </div>
@@ -97,8 +107,10 @@ export function LandingPage() {
               ticked={sheet.ticked}
               gamesRequired={selected?.games_required ?? null}
               poolLabel={selected?.label ?? ''}
+              shownCount={sheet.shownCount}
               onToggle={sheet.toggle}
               onSelectFirst={sheet.selectFirst}
+              onShowMore={sheet.showMore}
             />
             {watched.length > 0 ? (
               <div className="watch-row">
