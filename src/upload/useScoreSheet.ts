@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { checkGames, postEstimate } from '../api/client.ts'
+import { useNavigate } from 'react-router-dom'
+import { checkGames, getEstimate, postEstimate } from '../api/client.ts'
 import { CHECK_FAILED, ESTIMATE_FAILED, isAbortError, messageFrom } from '../api/errors.ts'
 import type { CheckedGame, PoolId } from '../api/types.ts'
+import { pollEstimate, settleRead } from './estimatePoll.ts'
 import {
   canEstimate,
   firstAcceptedIndexes,
@@ -22,6 +24,7 @@ type UseScoreSheetInput = {
   subject: string
   engineDown: boolean
   holdCheck: boolean
+  depth: number | null
 }
 
 type CheckSnapshot = {
@@ -37,7 +40,9 @@ export function useScoreSheet({
   subject,
   engineDown,
   holdCheck,
+  depth,
 }: UseScoreSheetInput) {
+  const navigate = useNavigate()
   const [phase, setPhase] = useState<SheetPhase>('idle')
   const [games, setGames] = useState<CheckedGame[]>([])
   const [ticked, setTicked] = useState<number[]>([])
@@ -45,6 +50,8 @@ export function useScoreSheet({
   const [checkError, setCheckError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [reading, setReading] = useState(false)
+  const [readDepth, setReadDepth] = useState<number | null>(null)
   const [shownCount, setShownCount] = useState(SHOWN_GAME_LIMIT)
 
   const latest = useRef({ poolId, pgn, subject })
@@ -73,6 +80,8 @@ export function useScoreSheet({
     submitAbort.current = null
     submittingRef.current = false
     setSubmitting(false)
+    setReading(false)
+    setReadDepth(null)
     setPhase(next)
     setGames([])
     setTicked([])
@@ -273,13 +282,18 @@ export function useScoreSheet({
       return
     }
 
-    submittingRef.current = true
-    setSubmitting(true)
-    setSubmitError(null)
+    if (depth == null || !Number.isFinite(depth)) return
+
+    const jobDepth = depth
     const controller = new AbortController()
     submitAbort.current = controller
+    submittingRef.current = true
+    setSubmitting(true)
+    setReading(true)
+    setReadDepth(jobDepth)
+    setSubmitError(null)
     try {
-      await postEstimate(
+      const started = await postEstimate(
         {
           pool: checked.pool,
           pgn: checked.pgn,
@@ -288,6 +302,19 @@ export function useScoreSheet({
         },
         controller.signal,
       )
+      if (controller.signal.aborted) return
+      const outcome = await pollEstimate({
+        id: started.id,
+        signal: controller.signal,
+        read: getEstimate,
+      })
+      if (controller.signal.aborted || outcome.type === 'cancelled') return
+      const settled = settleRead(outcome)
+      if (settled.reportId) {
+        navigate(`/report/${encodeURIComponent(settled.reportId)}`)
+        return
+      }
+      if (settled.error) setSubmitError(settled.error)
     } catch (error) {
       if (controller.signal.aborted || isAbortError(error)) return
       setSubmitError(messageFrom(error, ESTIMATE_FAILED))
@@ -295,9 +322,21 @@ export function useScoreSheet({
       if (submitAbort.current === controller) {
         submittingRef.current = false
         setSubmitting(false)
+        setReading(false)
+        setReadDepth(null)
         submitAbort.current = null
       }
     }
+  }
+
+  function cancelRead() {
+    submitAbort.current?.abort()
+    submitAbort.current = null
+    submittingRef.current = false
+    setSubmitting(false)
+    setReading(false)
+    setReadDepth(null)
+    setSubmitError(null)
   }
 
   return {
@@ -307,11 +346,14 @@ export function useScoreSheet({
     checkError,
     submitError,
     submitting,
+    reading,
+    readDepth,
     canEstimate: ready,
     shownCount,
     showMore,
     toggle,
     selectFirst,
     submit,
+    cancelRead,
   }
 }

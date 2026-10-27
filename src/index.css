@@ -1080,6 +1080,22 @@ label.score-row:has(input:disabled) {
   gap: 0.55rem;
 }
 
+.estimate-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.estimate-wait {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
 .estimate-block .field-error {
   margin: 0;
 }
@@ -1157,7 +1173,8 @@ label.score-row:has(input:disabled) {
   .score-row,
   .score-row.is-refused,
   .score-reason,
-  .score-count {
+  .score-count,
+  .estimate-wait {
     color: CanvasText;
   }
 

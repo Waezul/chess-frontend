@@ -23,6 +23,7 @@ export function UploadProvider({ children }: { children: ReactNode }) {
     subject: form.subject,
     engineDown: form.engineDown,
     holdCheck: form.lichessLoading,
+    depth: selected?.depth ?? null,
   })
 
   return <UploadContext.Provider value={{ form, sheet, selected }}>{children}</UploadContext.Provider>

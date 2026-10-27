@@ -123,12 +123,15 @@ export function LandingPage() {
               gamesRequired={selected?.games_required ?? null}
               enabled={sheet.canEstimate}
               submitting={sheet.submitting}
+              reading={sheet.reading}
+              depth={sheet.readDepth}
               healthNotice={form.healthNotice}
               checkError={sheet.checkError}
               submitError={sheet.submitError}
               onEstimate={() => {
                 void sheet.submit()
               }}
+              onCancel={sheet.cancelRead}
             />
           </div>
         </form>

@@ -9,6 +9,7 @@ import type {
   PoolId,
   PoolSummary,
   Reason,
+  PolledJob,
   StartedJob,
 } from './types.ts'
 
@@ -22,7 +23,7 @@ export type LandingData = {
 }
 
 function apiBase(): string {
-  const value = import.meta.env.VITE_API_BASE_URL
+  const value = import.meta.env?.VITE_API_BASE_URL
   if (typeof value === 'string' && value.trim()) return value.trim().replace(/\/+$/, '')
   return DEFAULT_API_BASE
 }
@@ -253,6 +254,24 @@ export async function checkGames(
     }
     throw error
   }
+}
+
+function parsePolledJob(value: unknown): PolledJob | null {
+  if (!value || typeof value !== 'object') return null
+  const job = value as { id?: unknown; status?: unknown; error?: unknown; message?: unknown }
+  if (typeof job.id !== 'string' || !job.id.trim()) return null
+  if (job.status === 'queued' || job.status === 'running' || job.status === 'done') {
+    return { id: job.id, status: job.status }
+  }
+  if (job.status !== 'failed') return null
+  return { id: job.id, status: 'failed', message: sentenceFor(job) ?? '' }
+}
+
+export async function getEstimate(id: string, signal: AbortSignal): Promise<PolledJob> {
+  const response = await requestJson(`/v1/estimates/${encodeURIComponent(id)}`, { signal })
+  const parsed = parsePolledJob(response)
+  if (!parsed) throw new ApiError(200, '', '')
+  return parsed
 }
 
 export async function postEstimate(body: EstimateRequest, signal: AbortSignal): Promise<StartedJob> {
