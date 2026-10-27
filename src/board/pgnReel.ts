@@ -135,6 +135,34 @@ export function splitPgn(pgn: string): string[] {
   return chunks.map((chunk) => chunk.trim()).filter(Boolean)
 }
 
+function endingLabel(chess: Chess, white: string, black: string): string | null {
+  const headers = chess.getHeaders()
+  const result = headers.Result?.trim() ?? ''
+  const termination = (headers.Termination ?? '').trim().toLowerCase()
+  const whiteWins = result === '1-0'
+  const blackWins = result === '0-1'
+  const drawn = result === '1/2-1/2'
+  if (!whiteWins && !blackWins && !drawn && !chess.isGameOver()) return null
+
+  if (drawn || (!whiteWins && !blackWins && chess.isDraw())) {
+    if (chess.isStalemate()) return 'Stalemate. Draw.'
+    if (chess.isInsufficientMaterial()) return 'Draw by insufficient material.'
+    if (chess.isThreefoldRepetition()) return 'Draw by repetition.'
+    if (chess.isDrawByFiftyMoves()) return 'Draw by the fifty-move rule.'
+    if (termination.includes('agreement')) return 'Draw by agreement.'
+    return 'Draw.'
+  }
+
+  const winner = blackWins ? black : white
+  const loser = blackWins ? white : black
+  if (chess.isCheckmate()) return `Checkmate. ${winner} wins.`
+  if (termination.includes('time')) return `${loser} ran out of time.`
+  if (termination.includes('abandon')) return `${loser} abandoned the game.`
+  if (termination.includes('resign') || termination === 'normal') return `${loser} resigns.`
+  if (whiteWins || blackWins) return `${winner} wins.`
+  return null
+}
+
 function readGame(chunk: string): ReplayGame | null {
   try {
     const chess = new Chess()
@@ -159,7 +187,21 @@ function readGame(chunk: string): ReplayGame | null {
       pieces = recorded.pieces
       moves.push(recorded.move)
     }
-    return { start, startTurn, moves }
+    const headers = chess.getHeaders()
+    const name = (value: string | undefined, fallback: string) => {
+      const trimmed = value?.trim()
+      return trimmed && trimmed !== '?' ? trimmed : fallback
+    }
+    const white = name(headers.White, 'White')
+    const black = name(headers.Black, 'Black')
+    return {
+      white,
+      black,
+      ending: endingLabel(chess, white, black),
+      start,
+      startTurn,
+      moves,
+    }
   } catch {
     return null
   }
@@ -167,12 +209,23 @@ function readGame(chunk: string): ReplayGame | null {
 
 export function parsePgnReel(pgn: string): ReplayGame[] {
   if (!pgn.trim()) return []
-  const games: ReplayGame[] = []
-  for (const chunk of splitPgn(pgn)) {
+  return splitPgn(pgn).flatMap((chunk) => {
     const game = readGame(chunk)
-    if (game) games.push(game)
-  }
-  return games
+    return game ? [game] : []
+  })
+}
+
+export function selectPgn(pgn: string, indexes: readonly number[]): string {
+  if (!pgn.trim() || indexes.length === 0) return ''
+  const chunks = splitPgn(pgn)
+  return indexes
+    .map((index) => chunks[index])
+    .filter((chunk): chunk is string => Boolean(chunk && readGame(chunk)))
+    .join('\n\n')
+}
+
+export function parsePgnGames(pgn: string, indexes: readonly number[]): ReplayGame[] {
+  return parsePgnReel(selectPgn(pgn, indexes))
 }
 
 export function turnLabel(turn: PieceColor): string {

@@ -25,13 +25,10 @@ export type ReplayMove = {
 }
 
 export type ReplayGame = {
+  white: string
+  black: string
+  ending: string | null
   start: PlacedPiece[]
   startTurn: PieceColor
   moves: ReplayMove[]
-}
-
-export type ReelCue = {
-  label: string
-  san: string
-  turn: string
 }

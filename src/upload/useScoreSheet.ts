@@ -2,7 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { checkGames, postEstimate } from '../api/client.ts'
 import { CHECK_FAILED, ESTIMATE_FAILED, isAbortError, messageFrom } from '../api/errors.ts'
 import type { CheckedGame, PoolId } from '../api/types.ts'
-import { canEstimate, nextCheck, tickedIndexes, type CheckedSnapshot } from './scoreSheet.ts'
+import {
+  canEstimate,
+  firstAcceptedIndexes,
+  nextCheck,
+  shownGames,
+  tickedIndexes,
+  watchLimit,
+  type CheckedSnapshot,
+} from './scoreSheet.ts'
 
 type SheetPhase = 'idle' | 'checking' | 'ready' | 'failed'
 
@@ -211,11 +219,20 @@ export function useScoreSheet({
   }, [poolId])
 
   function toggle(index: number) {
-    const game = games.find((item) => item.index === index)
+    const visible = shownGames(games)
+    const game = visible.find((item) => item.index === index)
     if (!game?.accepted) return
-    setTicked((current) =>
-      current.includes(index) ? current.filter((item) => item !== index) : [...current, index],
-    )
+    setTicked((current) => {
+      const allowed = new Set(visible.filter((item) => item.accepted).map((item) => item.index))
+      const kept = current.filter((item) => allowed.has(item))
+      if (kept.includes(index)) return kept.filter((item) => item !== index)
+      if (kept.length >= watchLimit(gamesRequired)) return kept
+      return [...kept, index]
+    })
+  }
+
+  function selectFirst() {
+    setTicked(firstAcceptedIndexes(shownGames(games), watchLimit(gamesRequired)))
   }
 
   const ready = canEstimate({
@@ -285,6 +302,7 @@ export function useScoreSheet({
     submitting,
     canEstimate: ready,
     toggle,
+    selectFirst,
     submit,
   }
 }

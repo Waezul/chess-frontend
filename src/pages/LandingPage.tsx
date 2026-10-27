@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ChessStage } from '../board/ChessStage.tsx'
 import { parsePgnReel } from '../board/pgnReel.ts'
-import type { ReelCue } from '../board/types.ts'
 import { useReducedMotion } from '../board/useReducedMotion.ts'
 import { EstimateControl } from '../components/EstimateControl.tsx'
 import { NameField } from '../components/NameField.tsx'
@@ -9,20 +9,12 @@ import { PgnField } from '../components/PgnField.tsx'
 import { PoolPicker } from '../components/PoolPicker.tsx'
 import { ScoreSheet } from '../components/ScoreSheet.tsx'
 import { SiteHeader } from '../components/SiteHeader.tsx'
-import { useScoreSheet } from '../upload/useScoreSheet.ts'
-import { useUploadForm } from '../upload/useUploadForm.ts'
+import { useUpload } from '../upload/UploadProvider.tsx'
+import { watchLimit, watchedIndexes } from '../upload/scoreSheet.ts'
 
 export function LandingPage() {
-  const form = useUploadForm()
-  const selected = form.pools?.find((pool) => pool.id === form.poolId) ?? null
-  const sheet = useScoreSheet({
-    poolId: form.poolId,
-    gamesRequired: selected?.games_required ?? null,
-    pgn: form.pgn,
-    subject: form.subject,
-    engineDown: form.engineDown,
-    holdCheck: form.lichessLoading,
-  })
+  const navigate = useNavigate()
+  const { form, sheet, selected } = useUpload()
   const options =
     form.pools?.map((pool) => ({
       id: pool.id,
@@ -31,38 +23,33 @@ export function LandingPage() {
       unavailableReason: pool.unavailable_reason,
     })) ?? []
   const games = useMemo(() => parsePgnReel(form.pgn), [form.pgn])
+  const watched = useMemo(
+    () => watchedIndexes(sheet.games, sheet.ticked, watchLimit(selected?.games_required ?? null)),
+    [selected?.games_required, sheet.games, sheet.ticked],
+  )
   const reduced = useReducedMotion()
-  const [armed, setArmed] = useState(false)
-  const [pausedPgn, setPausedPgn] = useState<string | null>(null)
-  const [cue, setCue] = useState<ReelCue | null>(null)
-  if (armed && games.length === 0) setArmed(false)
+  const [creating, setCreating] = useState(false)
   const unplayable = form.pgn.trim().length > 0 && games.length === 0
-  const playing = armed && games.length > 0
-  const paused = pausedPgn === form.pgn
 
   function startWatch() {
-    if (games.length === 0) return
-    setArmed(true)
-    setPausedPgn(null)
-    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
+    if (watched.length === 0 || creating) return
+    setCreating(true)
+    window.setTimeout(() => {
+      navigate('/replay')
+      window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
+    }, 0)
   }
 
   return (
-    <div className={playing ? 'room room-landing room-watching' : 'room room-landing'}>
+    <div className="room room-landing">
       <SiteHeader overlay />
       <div className="stage" aria-hidden="true" inert>
-        <ChessStage
-          pgn={form.pgn}
-          watching={playing}
-          paused={paused}
-          reduced={reduced}
-          onCue={setCue}
-        />
+        <ChessStage pgn="" watching={false} paused={false} reduced={reduced} gameIndex={0} ply={0} />
       </div>
       <main>
         <section className="portrait">
           <div className="portrait-scrim">
-            <div className="portrait-copy" aria-hidden={playing ? true : undefined}>
+            <div className="portrait-copy">
               <h1>Get your Elo guessed.</h1>
               <p>
                 Our model will guess your Elo. The 10–90% band is the low and high of that guess, not
@@ -70,22 +57,6 @@ export function LandingPage() {
               </p>
             </div>
           </div>
-          {playing && cue ? (
-            <div className="replay-readout">
-              <div className="replay-lines" aria-live="polite">
-                <p className="replay-game">{cue.label}</p>
-                {cue.san ? <p className="replay-san">{cue.san}</p> : null}
-                <p className="replay-turn">{cue.turn}</p>
-              </div>
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => setPausedPgn(paused ? null : form.pgn)}
-              >
-                {paused ? 'Play replay' : 'Pause replay'}
-              </button>
-            </div>
-          ) : null}
         </section>
         <form
           className="upload"
@@ -127,11 +98,12 @@ export function LandingPage() {
               gamesRequired={selected?.games_required ?? null}
               poolLabel={selected?.label ?? ''}
               onToggle={sheet.toggle}
+              onSelectFirst={sheet.selectFirst}
             />
-            {games.length > 0 && !playing ? (
+            {watched.length > 0 ? (
               <div className="watch-row">
-                <button type="button" className="text-button" onClick={startWatch}>
-                  {games.length === 1 ? 'Watch the game' : 'Watch the games'}
+                <button type="button" className="text-button" onClick={startWatch} aria-busy={creating}>
+                  {creating ? 'Creating the replay.' : watched.length === 1 ? 'Watch the game' : 'Watch the games'}
                 </button>
               </div>
             ) : null}
@@ -143,7 +115,6 @@ export function LandingPage() {
               checkError={sheet.checkError}
               submitError={sheet.submitError}
               onEstimate={() => {
-                if (games.length > 0) startWatch()
                 void sheet.submit()
               }}
             />

@@ -1,6 +1,6 @@
 import { PerspectiveCamera } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Component, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Component, Suspense, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   BoxGeometry,
   Color,
@@ -15,16 +15,16 @@ import {
 } from 'three'
 import { ReelFrameContext, type FrameRef, type ReelFrame } from './frame.ts'
 import { boardBounds, PORTRAIT_QUEEN, squareToWorld, TILE } from './layout.ts'
-import { parsePgnReel, positionAt, turnLabel } from './pgnReel.ts'
-import { StauntonPiece } from './pieces.tsx'
-import type { PlacedPiece, ReelCue, ReplayGame } from './types.ts'
+import { parsePgnReel, positionAt } from './pgnReel.ts'
+import { StauntonSet } from './pieces.tsx'
+import type { PlacedPiece, ReplayGame } from './types.ts'
 
-const ROOM = '#0b0c0d'
+const ROOM = '#212325'
 const BOUNDS = boardBounds()
 
 const PORTRAIT_SHOT = {
-  wide: { fov: 27, position: [-0.05, 1.12, 4.85] as const, look: [0.22, 0.92, 0] as const },
-  narrow: { fov: 32, position: [-0.15, 1.1, 5.5] as const, look: [0.16, 0.92, 0] as const },
+  wide: { fov: 27, position: [-0.05, 0.88, 4.55] as const, look: [0.22, 0.52, 0] as const },
+  narrow: { fov: 32, position: [-0.15, 1.05, 5.9] as const, look: [0.16, 0.42, 0] as const },
 }
 
 const TABLE_SHOT = {
@@ -53,9 +53,11 @@ type Materials = {
   light: MeshStandardMaterial
   dark: MeshStandardMaterial
   slab: MeshStandardMaterial
-  slit: MeshStandardMaterial
   contact: MeshBasicMaterial
   edge: MeshBasicMaterial
+  edgeInk: MeshBasicMaterial
+  mark: MeshBasicMaterial
+  markInk: MeshBasicMaterial
 }
 
 function mix(from: number, to: number, t: number) {
@@ -76,15 +78,17 @@ function useMaterials(): Materials {
   return useMemo(() => {
     const ivory = new MeshPhysicalMaterial({
       color: '#f7f4ec',
-      roughness: 0.58,
-      metalness: 0.04,
-      clearcoat: 0.12,
-      clearcoatRoughness: 0.62,
+      roughness: 0.46,
+      metalness: 0.03,
+      clearcoat: 0.28,
+      clearcoatRoughness: 0.42,
     })
     const ebony = new MeshPhysicalMaterial({
-      color: '#141413',
-      roughness: 0.42,
-      metalness: 0.18,
+      color: '#1c1b19',
+      roughness: 0.36,
+      metalness: 0.14,
+      clearcoat: 0.16,
+      clearcoatRoughness: 0.4,
     })
     const ivoryFade = ivory.clone()
     ivoryFade.transparent = true
@@ -107,7 +111,6 @@ function useMaterials(): Materials {
       opacity: 0,
     })
     const slab = new MeshStandardMaterial({ color: '#141413', roughness: 0.68, metalness: 0.08 })
-    const slit = new MeshStandardMaterial({ color: ROOM, roughness: 1, metalness: 0 })
     const contact = new MeshBasicMaterial({
       color: '#050505',
       transparent: true,
@@ -115,7 +118,20 @@ function useMaterials(): Materials {
       depthWrite: false,
     })
     const edge = new MeshBasicMaterial({ color: '#f5f5f2' })
-    return { ivory, ebony, ivoryFade, ebonyFade, light, dark, slab, slit, contact, edge }
+    const edgeInk = new MeshBasicMaterial({ color: '#141413' })
+    const mark = new MeshBasicMaterial({
+      color: '#f5f5f2',
+      transparent: true,
+      opacity: 0.42,
+      depthWrite: false,
+    })
+    const markInk = new MeshBasicMaterial({
+      color: '#141413',
+      transparent: true,
+      opacity: 0.4,
+      depthWrite: false,
+    })
+    return { ivory, ebony, ivoryFade, ebonyFade, light, dark, slab, contact, edge, edgeInk, mark, markInk }
   }, [])
 }
 
@@ -144,7 +160,7 @@ function KeyLight() {
     spot.position.set(mix(5.6, BOUNDS.cx, zoom), mix(8.4, 13.4, zoom), mix(2.4, BOUNDS.cz + 2.6, zoom))
     spot.target.position.set(mix(0.7, BOUNDS.cx, zoom), mix(0.85, 0, zoom), mix(0, BOUNDS.cz, zoom))
     spot.angle = mix(0.55, 0.92, zoom)
-    spot.intensity = mix(210, 360, zoom)
+    spot.intensity = mix(250, 420, zoom)
     spot.castShadow = zoom < 0.48
   })
 
@@ -156,7 +172,7 @@ function KeyLight() {
       penumbra={1}
       decay={2}
       distance={0}
-      intensity={210}
+      intensity={250}
       color="#fff4e4"
       castShadow
       shadow-mapSize-width={2048}
@@ -172,9 +188,9 @@ function CoolFill() {
   const light = useRef<DirectionalLight>(null)
   useFrame(() => {
     if (!light.current) return
-    light.current.intensity = mix(1.35, 2.4, frame?.current.zoom ?? 0)
+    light.current.intensity = mix(2.05, 3.15, frame?.current.zoom ?? 0)
   })
-  return <directionalLight ref={light} position={[-3.6, 3.4, -2.2]} intensity={1.35} color="#d5dee8" />
+  return <directionalLight ref={light} position={[-3.6, 3.4, -2.2]} intensity={2.05} color="#e4ebf2" />
 }
 
 function Ground({ fade }: { fade: { value: number } }) {
@@ -274,7 +290,7 @@ function CameraRig() {
       fov={narrow ? 32 : 27}
       near={0.1}
       far={80}
-      position={narrow ? [-0.15, 1.1, 5.5] : [-0.05, 1.12, 4.85]}
+      position={narrow ? [-0.15, 1.05, 5.9] : [-0.05, 0.88, 4.55]}
     />
   )
 }
@@ -337,10 +353,25 @@ function Slab({ material }: { material: Material }) {
   )
 }
 
+function squareIsDark(square: string) {
+  const file = square.charCodeAt(0) - 97
+  const rank = Number(square[1]) - 1
+  return (file + rank) % 2 === 0
+}
+
+function SquareMark({ square, material }: { square: string; material: Material }) {
+  const [x, y, z] = squareToWorld(square)
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x, y + 0.004, z]} material={material}>
+      <planeGeometry args={[TILE * 0.9, TILE * 0.9]} />
+    </mesh>
+  )
+}
+
 function SquareEdge({ square, material }: { square: string; material: Material }) {
   const [x, y, z] = squareToWorld(square)
-  const size = TILE - 0.045
-  const thickness = 0.018
+  const size = TILE - 0.04
+  const thickness = 0.034
   const half = size / 2 - thickness / 2
   return (
     <group position={[x, y + 0.01, z]}>
@@ -387,8 +418,19 @@ function Board({
           receiveShadow
         />
       ))}
-      {marks ? <SquareEdge square={marks[0]} material={materials.edge} /> : null}
-      {marks && marks[1] !== marks[0] ? <SquareEdge square={marks[1]} material={materials.edge} /> : null}
+      {marks
+        ? [marks[0], marks[1]]
+            .filter((square, index, list) => list.indexOf(square) === index)
+            .map((square) => {
+              const dark = squareIsDark(square)
+              return (
+                <group key={square}>
+                  <SquareMark square={square} material={dark ? materials.mark : materials.markInk} />
+                  <SquareEdge square={square} material={dark ? materials.edge : materials.edgeInk} />
+                </group>
+              )
+            })
+        : null}
     </group>
   )
 }
@@ -398,104 +440,64 @@ function ReelDriver({
   watching,
   paused,
   reduced,
+  gameIndex,
+  ply,
   frame,
-  onCue,
   onView,
 }: {
   games: ReplayGame[]
   watching: boolean
   paused: boolean
   reduced: boolean
+  gameIndex: number
+  ply: number
   frame: FrameRef
-  onCue: (cue: ReelCue) => void
   onView: (view: StageView) => void
 }) {
   const invalidate = useThree((state) => state.invalidate)
   const clock = useRef({
     zoomT: 0,
-    acc: 0,
-    game: 0,
-    ply: 0,
     mode: 'portrait' as 'portrait' | 'table',
-    cue: '',
   })
   const gamesRef = useRef(games)
   const watchingRef = useRef(watching)
   const pausedRef = useRef(paused)
   const reducedRef = useRef(reduced)
-  const onCueRef = useRef(onCue)
   const onViewRef = useRef(onView)
-  const publishRef = useRef<(gameIndex: number, plyIndex: number) => void>(() => {})
-
-  const publish = useCallback((gameIndex: number, plyIndex: number) => {
-    const list = gamesRef.current
-    const game = list[gameIndex]
-    if (!game) return
-    const pose = positionAt(game, plyIndex)
-    frame.current.slides = pose.slides
-    frame.current.slideT = reducedRef.current || plyIndex === 0 ? 1 : 0
-    onViewRef.current({ pieces: pose.pieces, marks: pose.marks })
-    const label = `Game ${gameIndex + 1} of ${list.length}`
-    const turn = turnLabel(pose.turn)
-    const key = `${label}|${pose.san}|${turn}`
-    if (key === clock.current.cue) return
-    clock.current.cue = key
-    onCueRef.current({ label, san: pose.san, turn })
-  }, [])
 
   useLayoutEffect(() => {
     gamesRef.current = games
     watchingRef.current = watching
     pausedRef.current = paused
     reducedRef.current = reduced
-    onCueRef.current = onCue
     onViewRef.current = onView
-    publishRef.current = publish
-  }, [games, onCue, onView, paused, publish, reduced, watching])
+  }, [games, onView, paused, reduced, watching])
 
   useLayoutEffect(() => {
-    clock.current.game = 0
-    clock.current.ply = 0
-    clock.current.acc = 0
-    clock.current.cue = ''
-    if (watching && games.length > 0) {
+    const game = games[gameIndex]
+    if (watching && game) {
       clock.current.mode = 'table'
-      publishRef.current(0, 0)
+      const pose = positionAt(game, ply)
+      frame.current.slides = pose.slides
+      frame.current.slideT = reduced || ply === 0 ? 1 : 0
+      onView({ pieces: pose.pieces, marks: pose.marks })
     }
     invalidate()
-  }, [games, invalidate, watching])
+  }, [frame, gameIndex, games, invalidate, onView, ply, reduced, watching])
 
   useFrame((_, delta) => {
     const dt = Math.min(Math.max(delta, 0), 0.05)
     const state = clock.current
     const playing = watchingRef.current && gamesRef.current.length > 0
     const target = playing ? 1 : 0
-    if (!pausedRef.current) {
-      if (Math.abs(state.zoomT - target) > 0.0001) {
-        const step = reducedRef.current ? 1 : dt / 0.9
-        state.zoomT =
-          state.zoomT < target ? Math.min(target, state.zoomT + step) : Math.max(target, state.zoomT - step)
-      }
-      if (playing) {
-        state.acc += dt
-        if (state.acc >= 0.7) {
-          state.acc -= 0.7
-          const game = gamesRef.current[state.game]
-          if (game) {
-            if (state.ply >= game.moves.length) {
-              state.game = (state.game + 1) % gamesRef.current.length
-              state.ply = 0
-            } else {
-              state.ply += 1
-            }
-            publishRef.current(state.game, state.ply)
-          }
-        }
-        if (frame.current.slideT < 1) {
-          const step = reducedRef.current ? 1 : dt / 0.28
-          frame.current.slideT = Math.min(1, frame.current.slideT + step)
-        }
-      }
+    if (!pausedRef.current && Math.abs(state.zoomT - target) > 0.0001) {
+      const step = reducedRef.current ? 1 : dt / 0.9
+      state.zoomT =
+        state.zoomT < target ? Math.min(target, state.zoomT + step) : Math.max(target, state.zoomT - step)
+    }
+    if (playing && frame.current.slideT < 1) {
+      const step = reducedRef.current ? 1 : dt / 0.28
+      frame.current.slideT = Math.min(1, frame.current.slideT + step)
     }
     frame.current.zoom = reducedRef.current ? state.zoomT : ease(state.zoomT)
     if (!playing && state.zoomT <= 0.001 && state.mode !== 'portrait') {
@@ -504,9 +506,9 @@ function ReelDriver({
       frame.current.slideT = 1
       onViewRef.current({ pieces: [PORTRAIT_QUEEN], marks: null })
     }
-    const zooming = Math.abs(state.zoomT - target) > 0.001
-    const sliding = frame.current.slideT < 1
-    if ((playing && !pausedRef.current) || zooming || sliding) invalidate()
+    const zooming = !pausedRef.current && Math.abs(state.zoomT - target) > 0.001
+    const sliding = playing && frame.current.slideT < 1
+    if (zooming || sliding) invalidate()
   }, -1)
 
   return null
@@ -517,43 +519,45 @@ function StageScene({
   watching,
   paused,
   reduced,
+  gameIndex,
+  ply,
   view,
   frame,
   materials,
   fade,
-  onCue,
   onView,
 }: {
   games: ReplayGame[]
   watching: boolean
   paused: boolean
   reduced: boolean
+  gameIndex: number
+  ply: number
   view: StageView
   frame: FrameRef
   materials: Materials
   fade: { value: number }
-  onCue: (cue: ReelCue) => void
   onView: (view: StageView) => void
 }) {
   return (
     <>
       <color attach="background" args={[ROOM]} />
-      <hemisphereLight args={['#f7f4ec', '#090909', 0.14]} />
+      <hemisphereLight args={['#f7f3ea', '#4a4e56', 0.62]} />
       <KeyLight />
-      <directionalLight position={[-2.4, 2.2, 4.2]} intensity={0.45} color="#f3eee4" />
+      <directionalLight position={[-2.4, 2.2, 4.2]} intensity={1.35} color="#f7f1e4" />
       <CoolFill />
       <Ground fade={fade} />
       <Board materials={materials} marks={view.marks} />
-      {view.pieces.map((piece) => (
-        <StauntonPiece
-          key={piece.id}
-          piece={piece}
-          solid={piece.color === 'w' ? materials.ivory : materials.ebony}
-          fade={piece.color === 'w' ? materials.ivoryFade : materials.ebonyFade}
-          slit={materials.slit}
+      <Suspense fallback={null}>
+        <StauntonSet
+          pieces={view.pieces}
+          ivory={materials.ivory}
+          ebony={materials.ebony}
+          ivoryFade={materials.ivoryFade}
+          ebonyFade={materials.ebonyFade}
           contact={materials.contact}
         />
-      ))}
+      </Suspense>
       <CameraRig />
       <MaterialsFade materials={materials} />
       <ReelDriver
@@ -561,8 +565,9 @@ function StageScene({
         watching={watching}
         paused={paused}
         reduced={reduced}
+        gameIndex={gameIndex}
+        ply={ply}
         frame={frame}
-        onCue={onCue}
         onView={onView}
       />
       <Settle />
@@ -592,13 +597,15 @@ export function ChessStage({
   watching,
   paused,
   reduced,
-  onCue,
+  gameIndex,
+  ply,
 }: {
   pgn: string
   watching: boolean
   paused: boolean
   reduced: boolean
-  onCue: (cue: ReelCue) => void
+  gameIndex: number
+  ply: number
 }) {
   const games = useMemo(() => parsePgnReel(pgn), [pgn])
   const materials = useMaterials()
@@ -615,7 +622,7 @@ export function ChessStage({
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
         onCreated={({ gl }) => {
           gl.setClearColor(new Color(ROOM), 1)
-          gl.toneMappingExposure = 1.05
+          gl.toneMappingExposure = 1.12
           gl.domElement.setAttribute('aria-hidden', 'true')
         }}
         style={{ width: '100%', height: '100%', display: 'block', background: ROOM }}
@@ -626,11 +633,12 @@ export function ChessStage({
             watching={watching}
             paused={paused}
             reduced={reduced}
+            gameIndex={gameIndex}
+            ply={ply}
             view={view}
             frame={frame}
             materials={materials}
             fade={fade}
-            onCue={onCue}
             onView={setView}
           />
         </ReelFrameContext.Provider>

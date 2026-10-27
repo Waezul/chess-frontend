@@ -47,6 +47,56 @@ export function refusalCopy(reason: Reason, poolLabel: string): string | null {
   }
 }
 
+export const SHOWN_GAME_LIMIT = 10
+export const WATCH_GAME_LIMIT = 8
+
+function dateKey(date: string | null): string {
+  if (!date) return ''
+  return date.trim().replaceAll('.', '')
+}
+
+export function byRecent(games: readonly CheckedGame[]): CheckedGame[] {
+  return [...games].sort((left, right) => {
+    const byDate = dateKey(right.date).localeCompare(dateKey(left.date))
+    if (byDate !== 0) return byDate
+    return left.index - right.index
+  })
+}
+
+export function shownGames(games: readonly CheckedGame[], limit = SHOWN_GAME_LIMIT): CheckedGame[] {
+  return byRecent(games).slice(0, limit)
+}
+
+export function firstAcceptedIndexes(games: readonly CheckedGame[], count: number): number[] {
+  const indexes: number[] = []
+  for (const game of games) {
+    if (!game.accepted) continue
+    indexes.push(game.index)
+    if (indexes.length >= count) break
+  }
+  return indexes
+}
+
+export function watchLimit(gamesRequired: number | null): number {
+  if (gamesRequired == null || gamesRequired < 1) return WATCH_GAME_LIMIT
+  return Math.min(gamesRequired, WATCH_GAME_LIMIT)
+}
+
+export function watchedIndexes(
+  games: readonly CheckedGame[],
+  ticked: readonly number[],
+  limit = WATCH_GAME_LIMIT,
+): number[] {
+  const chosen = new Set(tickedIndexes(games, ticked))
+  const indexes: number[] = []
+  for (const game of shownGames(games)) {
+    if (!chosen.has(game.index)) continue
+    indexes.push(game.index)
+    if (indexes.length >= limit) break
+  }
+  return indexes
+}
+
 export function tickedIndexes(games: readonly CheckedGame[], ticked: readonly number[]): number[] {
   const accepted = new Set(games.filter((game) => game.accepted).map((game) => game.index))
   const unique = new Set<number>()

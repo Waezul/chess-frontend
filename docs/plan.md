@@ -215,7 +215,7 @@ Two camera states, same set:
 - **Portrait.** Tight on the white queen, three-quarter view, key light from the upper left, a heavy cast shadow on the black ground. The headline and the support line sit on that shadow, in `--ink`, over a scrim of `#090909` at about 55% so the letters never sit on ivory. No orbit control.
 - **Table.** The camera eases back until the whole board fits. The heavy cast shadow animates out. Light flattens to the working set: key, dim rim, faint contact shadow. Squares are the two greys above. No texture, no grass, no file or rank labels.
 
-Pieces are lathed Staunton silhouettes. Ivory and charcoal. White at the bottom.
+Pieces are modeled Staunton meshes, painted ivory and charcoal. White at the bottom.
 
 Playback, once the field holds a PGN:
 
