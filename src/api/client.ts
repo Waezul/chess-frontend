@@ -1,5 +1,6 @@
 import { AbsentApiError, ApiError, ENGINE_DOWN, errorCode, isAbortError, POOLS_FAILED, sentenceFor } from './errors.ts'
-import { checkFixture, healthFixture, poolsFixture } from './fixtures.ts'
+import { checkFromPgn } from './checkPgn.ts'
+import { healthFixture, poolsFixture } from './fixtures.ts'
 import type {
   CheckedGame,
   EstimateRequest,
@@ -241,7 +242,15 @@ export async function checkGames(
     if (!parsed) throw new ApiError(200, '', '')
     return parsed
   } catch (error) {
-    if (error instanceof AbsentApiError) return checkFixture(body.pool)
+    if (error instanceof AbsentApiError) {
+      const gamesRequired = poolsFixture.find((pool) => pool.id === body.pool)?.games_required ?? 8
+      return checkFromPgn({
+        pool: body.pool,
+        pgn: body.pgn,
+        subject: body.subject,
+        gamesRequired,
+      })
+    }
     throw error
   }
 }

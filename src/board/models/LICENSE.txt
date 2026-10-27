@@ -1,0 +1,12 @@
+3D Chess Pieces Pack, low-poly LOD
+Source: https://polyyai.itch.io/3d-chess-pieces-pack
+Generated with polyy.ai
+
+CC0 1.0 Universal (Public Domain Dedication)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The six meshes in this folder are the light Staunton pieces from that pack.
+Embedded wood textures were removed. The scene paints them ivory and charcoal.
+
+You can use, modify, and redistribute these models, including commercially.
+Attribution is not required. Do not resell the pack unmodified as your own asset pack.
