@@ -134,6 +134,8 @@ Health `engine: "down"` disables the estimate button and shows the `engine_down`
 
 ## Types
 
+Client TypeScript (from `src/api/types.ts`). Wire JSON still matches [backend.md](backend.md); the client splits poll parsing from the full done payload.
+
 ```ts
 type PoolId = "classical" | "rapid" | "blitz" | "bullet";
 
@@ -178,6 +180,19 @@ type CheckedGame = {
   moves: number | null;
 };
 
+type GameCheck = {
+  pool: PoolId;
+  games_required: number;
+  games: CheckedGame[];
+};
+
+type EstimateRequest = {
+  pool: PoolId;
+  pgn: string;
+  subject: string;
+  game_indexes: number[];
+};
+
 type Driver = {
   feature: string;
   direction: "higher" | "lower";
@@ -203,10 +218,27 @@ type Estimate = {
   };
 };
 
-type Job =
+type StartedJob = {
+  id: string;
+  status: "queued" | "running";
+};
+
+/** Poll outcome used while waiting on `/`. Done here has no estimate body. */
+type PolledJob =
+  | { id: string; status: "queued" | "running" }
+  | { id: string; status: "done" }
+  | { id: string; status: "failed"; message: string };
+
+/** Full GET /v1/estimates/{id} parse used by the report (and by the poller before discarding estimate). */
+type EstimateJob =
   | { id: string; status: "queued" | "running" }
   | { id: string; status: "done"; estimate: Estimate }
-  | { id: string; status: "failed"; error: string; message: string };
+  | { id: string; status: "failed"; message: string };
+
+type ApiFailure = {
+  error: string;
+  message: string;
+};
 
 type BinRow = {
   bin: string;
@@ -225,9 +257,11 @@ type PoolCard = PoolSummary & {
 };
 ```
 
-`lab` is true whenever `ship_ready` is false. Trust the flag.
+On the wire, a failed job is still `{ status: "failed", error, message }` and a done job still includes `estimate`. The client maps failures to a `message` string for display (`sentenceFor`), and the landing poll treats `done` as an id to open `/report/{id}`.
 
-`within_150` and `coverage` are fractions from 0 to 1. Format as percents with no decimal (`0.68` → `68%`). `typical_error`, `mae`, `bias`, and `median_width` are Elo. Format as integers. Bias gets a sign (`+121`, `−90`).
+`lab` is true whenever `ship_ready` is false. Trust the flag on the payload even when the report UI does not print a lab line.
+
+`within_150` and `coverage` are fractions from 0 to 1. Format as percents with no decimal (`0.68` → `68%`) when those numbers are shown (method page / future UI). `typical_error`, `mae`, `bias`, and `median_width` are Elo. Format as integers. Bias gets a sign (`+121`, `−90`).
 
 ## Checklist copy
 
