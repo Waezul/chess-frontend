@@ -1,4 +1,4 @@
-import type { BinRow, Health, PoolCard, PoolId, PoolSummary } from './types.ts'
+import type { BinRow, Estimate, Health, PoolCard, PoolId, PoolSummary } from './types.ts'
 
 export const healthFixture: Health = {
   ok: true,
@@ -132,4 +132,39 @@ const poolCards: Record<PoolId, PoolCard> = {
 
 export function poolCardFixture(id: PoolId): PoolCard {
   return poolCards[id]
+}
+
+export const classicalEstimate: Estimate = {
+  pool: 'classical',
+  revision: 'classical8-v1',
+  ship_ready: false,
+  lab: true,
+  n_games: 8,
+  depth: 10,
+  q10: 1483,
+  q50: 1706,
+  q90: 1958,
+  drivers: [
+    {
+      feature: 'mistake_rate',
+      direction: 'lower',
+      text: 'Fewer serious mistakes than the typical game in this sample pulled the center up.',
+    },
+    {
+      feature: 'blunder_rate',
+      direction: 'lower',
+      text: 'Fewer large errors pulled the center up.',
+    },
+    {
+      feature: 'cpl_mean',
+      direction: 'higher',
+      text: 'Giving away more on a typical move pulled the center down.',
+    },
+  ],
+  limits: {
+    typical_error: 124,
+    within_150: 0.68,
+    coverage: 0.8,
+    tail_note: null,
+  },
 }

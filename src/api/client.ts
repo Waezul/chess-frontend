@@ -328,10 +328,6 @@ function parsePolledJob(value: unknown): PolledJob | null {
   return { id: job.id, status: 'failed', message: sentenceFor(job) ?? '' }
 }
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value)
-}
-
 function parseDriver(value: unknown): Driver | null {
   if (!value || typeof value !== 'object') return null
   const driver = value as Driver
@@ -397,23 +393,6 @@ export async function getEstimate(id: string, signal: AbortSignal): Promise<Esti
   const parsed = parseEstimateJob(response)
   if (!parsed) throw new ApiError(200, '', '')
   return parsed
-}
-
-export async function getPool(id: PoolId, signal: AbortSignal): Promise<PoolSummary> {
-  const body = await getJson(`/v1/pools/${encodeURIComponent(id)}`, signal)
-  if (!isPool(body) || body.id !== id) throw new ApiError(200, '', '')
-  return {
-    id,
-    label: body.label,
-    available: body.available,
-    unavailable_reason: body.unavailable_reason,
-    games_required: body.games_required,
-    elo_min: body.elo_min,
-    elo_max: body.elo_max,
-    depth: body.depth,
-    revision: body.revision,
-    ship_ready: body.ship_ready,
-  }
 }
 
 export async function postEstimate(body: EstimateRequest, signal: AbortSignal): Promise<StartedJob> {

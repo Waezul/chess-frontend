@@ -268,7 +268,13 @@ test('the report loads the estimate and the pool, and a reload without the check
       return jsonResponse(200, { id: 'job_01', status: 'done', estimate: classicalEstimate })
     }
     if (url.endsWith('/v1/pools/classical')) {
-      return jsonResponse(200, { ...classical, summary: ['Do not render this sentence.'] })
+      return jsonResponse(200, {
+        ...classical,
+        source_label: 'Lichess classical, February 2017',
+        test_players: 1119,
+        summary: ['Do not render this sentence.'],
+        bins: [],
+      })
     }
     throw new Error(`unexpected ${url}`)
   }
