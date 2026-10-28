@@ -4,6 +4,9 @@ import { healthFixture, poolCardFixture, poolsFixture } from './fixtures.ts'
 import type {
   BinRow,
   CheckedGame,
+  Driver,
+  Estimate,
+  EstimateJob,
   EstimateRequest,
   GameCheck,
   Health,
@@ -325,25 +328,101 @@ function parsePolledJob(value: unknown): PolledJob | null {
   return { id: job.id, status: 'failed', message: sentenceFor(job) ?? '' }
 }
 
-export async function getEstimate(id: string, signal: AbortSignal): Promise<PolledJob> {
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function parseDriver(value: unknown): Driver | null {
+  if (!value || typeof value !== 'object') return null
+  const driver = value as Driver
+  if (typeof driver.feature !== 'string') return null
+  if (driver.direction !== 'higher' && driver.direction !== 'lower') return null
+  if (typeof driver.text !== 'string') return null
+  return { feature: driver.feature, direction: driver.direction, text: driver.text }
+}
+
+function parseEstimate(value: unknown): Estimate | null {
+  if (!value || typeof value !== 'object') return null
+  const body = value as Estimate
+  if (!isPoolId(body.pool)) return null
+  if (typeof body.revision !== 'string') return null
+  if (typeof body.ship_ready !== 'boolean' || typeof body.lab !== 'boolean') return null
+  if (!isFiniteNumber(body.n_games) || !isFiniteNumber(body.depth)) return null
+  if (!isFiniteNumber(body.q10) || !isFiniteNumber(body.q50) || !isFiniteNumber(body.q90)) return null
+  if (!Array.isArray(body.drivers)) return null
+  const drivers: Driver[] = []
+  for (const item of body.drivers) {
+    const driver = parseDriver(item)
+    if (!driver) return null
+    drivers.push(driver)
+  }
+  const limits = body.limits
+  if (!limits || typeof limits !== 'object') return null
+  if (!isFiniteNumber(limits.typical_error) || !isFiniteNumber(limits.within_150) || !isFiniteNumber(limits.coverage)) {
+    return null
+  }
+  if (!(limits.tail_note === null || typeof limits.tail_note === 'string')) return null
+  return {
+    pool: body.pool,
+    revision: body.revision,
+    ship_ready: body.ship_ready,
+    lab: body.lab,
+    n_games: body.n_games,
+    depth: body.depth,
+    q10: body.q10,
+    q50: body.q50,
+    q90: body.q90,
+    drivers,
+    limits: {
+      typical_error: limits.typical_error,
+      within_150: limits.within_150,
+      coverage: limits.coverage,
+      tail_note: limits.tail_note,
+    },
+  }
+}
+
+function parseEstimateJob(value: unknown): EstimateJob | null {
+  const job = parsePolledJob(value)
+  if (!job) return null
+  if (job.status !== 'done') return job
+  if (!value || typeof value !== 'object' || !('estimate' in value)) return null
+  const estimate = parseEstimate((value as { estimate: unknown }).estimate)
+  if (!estimate) return null
+  return { id: job.id, status: 'done', estimate }
+}
+
+export async function getEstimate(id: string, signal: AbortSignal): Promise<EstimateJob> {
   const response = await requestJson(`/v1/estimates/${encodeURIComponent(id)}`, { signal })
-  const parsed = parsePolledJob(response)
+  const parsed = parseEstimateJob(response)
   if (!parsed) throw new ApiError(200, '', '')
   return parsed
 }
 
-export async function postEstimate(body: EstimateRequest, signal: AbortSignal): Promise<StartedJob> {
-  try {
-    const response = await requestJson('/v1/estimates', {
-      method: 'POST',
-      body: JSON.stringify(body),
-      signal,
-    })
-    const parsed = parseStartedJob(response)
-    if (!parsed) throw new ApiError(202, '', '')
-    return parsed
-  } catch (error) {
-    if (error instanceof AbsentApiError) return { id: 'job_01', status: 'queued' }
-    throw error
+export async function getPool(id: PoolId, signal: AbortSignal): Promise<PoolSummary> {
+  const body = await getJson(`/v1/pools/${encodeURIComponent(id)}`, signal)
+  if (!isPool(body) || body.id !== id) throw new ApiError(200, '', '')
+  return {
+    id,
+    label: body.label,
+    available: body.available,
+    unavailable_reason: body.unavailable_reason,
+    games_required: body.games_required,
+    elo_min: body.elo_min,
+    elo_max: body.elo_max,
+    depth: body.depth,
+    revision: body.revision,
+    ship_ready: body.ship_ready,
   }
+}
+
+export async function postEstimate(body: EstimateRequest, signal: AbortSignal): Promise<StartedJob> {
+  const response = await requestJson('/v1/estimates', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    signal,
+  })
+  const parsed = parseStartedJob(response)
+  if (!parsed) throw new ApiError(202, '', '')
+  return parsed
 }

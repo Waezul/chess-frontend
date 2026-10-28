@@ -469,7 +469,7 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .stage,
   .portrait-copy,
-  .replay-progress span,
+  .progress-track span,
   .score-bone,
   .spinner {
     animation: none;
@@ -481,7 +481,7 @@ a {
     border-right-color: transparent;
   }
 
-  .replay-progress span {
+  .progress-track span {
     width: 100%;
     opacity: 0.7;
   }
@@ -1013,7 +1013,7 @@ a {
   width: 84%;
 }
 
-.replay-progress {
+.progress-track {
   width: 9rem;
   height: 2px;
   margin-top: 0.75rem;
@@ -1021,15 +1021,15 @@ a {
   background: color-mix(in srgb, var(--brass) 35%, transparent);
 }
 
-.replay-progress span {
+.progress-track span {
   display: block;
   width: 40%;
   height: 100%;
   background: var(--brass);
-  animation: replay-progress 1s ease-in-out infinite;
+  animation: progress-track 1s ease-in-out infinite;
 }
 
-@keyframes replay-progress {
+@keyframes progress-track {
   from {
     transform: translateX(-120%);
   }
@@ -1193,7 +1193,7 @@ label.score-row:has(input:disabled) {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.15rem;
+  width: 100%;
 }
 
 .estimate-wait {
@@ -1203,6 +1203,22 @@ label.score-row:has(input:disabled) {
   font-weight: 400;
   line-height: 1.45;
   text-wrap: pretty;
+}
+
+.estimate-status .progress-track span {
+  width: 100%;
+  animation: none;
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .estimate-status .progress-track span {
+    animation: score-pulse 1.1s ease-in-out infinite alternate;
+  }
+}
+
+.estimate-status .text-button {
+  margin-top: 0.35rem;
 }
 
 .estimate-block .field-error {
@@ -1287,6 +1303,15 @@ label.score-row:has(input:disabled) {
     color: CanvasText;
   }
 
+  .progress-track {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .progress-track span {
+    background: Highlight;
+  }
+
   .score-row input {
     appearance: auto;
     background: ButtonFace;
@@ -1295,5 +1320,233 @@ label.score-row:has(input:disabled) {
 
   .score-row:focus-within {
     outline-color: CanvasText;
+  }
+}
+
+.page.report {
+  padding-right: max(var(--page-pad), env(safe-area-inset-right));
+  padding-bottom: max(4rem, env(safe-area-inset-bottom));
+}
+
+.page.report:focus,
+.page.report:focus-visible {
+  outline: none;
+}
+
+.page.report .report-status,
+.page.report .field-error,
+.page.report .report-expired {
+  max-width: 62ch;
+  margin-top: 0;
+}
+
+.page.report .report-status {
+  color: var(--ink);
+}
+
+.page.report .field-error {
+  color: var(--error);
+}
+
+.report-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.5rem;
+  width: min(100%, 26.25rem);
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.page.report .report-stack p {
+  max-width: 62ch;
+  margin-top: 0;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.page.report .report-stack .report-limit.is-quiet,
+.page.report .report-stack .report-count,
+.page.report .report-stack .report-footer {
+  color: var(--ink-dim);
+}
+
+.page.report .report-stack .field-error {
+  color: var(--error);
+}
+
+.report-lead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.page.report h1 {
+  max-width: 100%;
+  font-size: clamp(2.75rem, 17cqi, 4.5rem);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.034em;
+  line-height: 0.96;
+}
+
+.report-center {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-count,
+.report-footer,
+.report-tally {
+  font-variant-numeric: tabular-nums;
+}
+
+.report-drivers,
+.report-played,
+.band-scale,
+.report-footer {
+  width: 100%;
+}
+
+.report-drivers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.band-scale {
+  margin: 0;
+}
+
+.band-rail {
+  position: relative;
+  height: 1.75rem;
+}
+
+.band-line,
+.band-span,
+.band-tick {
+  position: absolute;
+  top: 50%;
+}
+
+.band-line {
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--ink-faint);
+  transform: translateY(-50%);
+}
+
+.band-span {
+  height: 6px;
+  background: var(--ink);
+  transform: translateY(-50%);
+}
+
+.band-tick {
+  width: 2px;
+  height: 1.15rem;
+  background: var(--brass);
+  transform: translate(-50%, -50%);
+}
+
+.band-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.1rem;
+  color: var(--ink-dim);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-played {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.report-played ul {
+  width: 100%;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report-played li {
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.report-played li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.report-footer {
+  line-height: 1.45;
+}
+
+.report-revision,
+.report-expired a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.report-revision {
+  color: var(--ink);
+}
+
+.report-revision:hover,
+.report-expired a:hover,
+.report-again:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+}
+
+.report-revision:active,
+.report-expired a:active {
+  opacity: 0.7;
+}
+
+.report-again {
+  padding-inline: 0;
+}
+
+.page.report a:focus:not(:focus-visible),
+.page.report .text-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (forced-colors: active) {
+  .band-line,
+  .band-span {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .band-ends {
+    color: CanvasText;
+  }
+
+  .band-tick {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .page.report a:focus-visible {
+    outline: 2px solid CanvasText;
   }
 }
