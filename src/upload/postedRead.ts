@@ -6,6 +6,7 @@ export type PostedRead = {
   id: string
   depth: number
   games: PostedGame[]
+  subject: string
 }
 
 let current: PostedRead | null = null
@@ -34,10 +35,11 @@ export function rowsFromChecklist(
   return rows
 }
 
-export function rememberPostedRead(read: PostedRead) {
+export function rememberPostedRead(read: Omit<PostedRead, 'subject'> & { subject?: string }) {
   current = {
     id: read.id,
     depth: read.depth,
+    subject: read.subject?.trim() ?? '',
     games: read.games.map((game) => ({ ...game })),
   }
 }

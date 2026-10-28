@@ -14,7 +14,7 @@ Three ways to put the first screen together:
 
 1. **Editorial marketing page, tool behind it.** A headline, a board, then sections for method, accuracy, and pools. This fights the contract. The accuracy numbers live on `/method` and only when `GET /v1/pools/{pool}` returns them. A landing grid would invent the rest.
 2. **The original chess-room column with a flat board.** Wordmark, a 2D board, then the form in order. This keeps the content and misses the first screen you asked for: a landing built around a 3D set, with the upload beneath it.
-3. **Chosen. Landing, then a report.** The first viewport is the queen portrait and the headline. The upload stack sits under it, in the order [frontend.md](frontend.md) already fixes. A file pulls the camera back and the parsed games play. A finished read opens `/report/{id}`. The band is the largest type on that page.
+3. **Chosen. Landing, then a report.** The first viewport is the queen portrait and the headline. The upload stack sits under it, in the order [frontend.md](frontend.md) already fixes. A file pulls the camera back and the parsed games play. A finished read opens `/report/{id}`. The rounded center is the largest type on that page.
 
 The lime accent and the warm paper background stay dropped. The room is black, white, and grey. The only warmth is the ivory of the pieces. A fixed knight step was the earlier stand-in. You chose a replay of the uploaded moves instead.
 
@@ -35,9 +35,9 @@ Wordmark: **Queen's Range**. How it works sits beside it and goes to `/method`.
 
 Ranked. If a later item fights an earlier one, the earlier one wins.
 
-1. **The band is the claim, and it lives on the report.** When a job reaches `done`, `/` navigates to `/report/{id}`. The largest type there is the rounded range. `1483 / 1706 / 1958` prints as **1480–1960**, second line `Center 1710.`, third line `8 rated Lichess classical games.` The words come from the payload: `{q10}–{q90}`, `Center {q50}.`, `{n_games} rated {pool label} games.` Raw quantiles never appear. Round `q10`, `q50`, and `q90` to the nearest 10. The track runs from that pool’s `elo_min` to `elo_max`, loaded with `GET /v1/pools/{pool}`. A filled span marks `q10`–`q90`. A tick marks `q50`. A quantile outside the track still prints, and the mark clips to the edge. Draw it as a measured span. The landing never prints the band.
+1. **The band is the claim, and it lives on the report.** When a job reaches `done`, `/` navigates to `/report/{id}`. The largest type there is the rounded center. `1483 / 1706 / 1958` prints the center as **1710**, with the range **1480–1960** smaller on the same screen. The line above the center is `We are centering your guess at`. The line under it is `based on these {n_games} games.` The subject name sits above that sentence when this browser still has it. Raw quantiles never appear. Round `q10`, `q50`, and `q90` to the nearest 10. The track runs from that pool’s `elo_min` to `elo_max`, on that same first screen. A tick marks `q50`. There is no filled ivory span. A quantile outside the track still prints, and the mark clips to the edge. The landing never prints the band.
 
-2. **The lab line is part of the object.** When `lab` is true, the banner above the headline is the sentence in [backend.md](backend.md): typical error as an integer, `within_150` as a percent with no decimal (`0.68` → `68%`). When `lab` is false, that banner is absent and one quiet line remains: `Held-out players were missed by about {typical_error} Elo.` `tail_note` prints only when the server sends a string. Driver lines are `drivers[].text` in order. `feature` is only a React key. `direction` is not shown.
+2. **The lab line stays in the data.** When `lab` is true, the sentence in [backend.md](backend.md) is still built: typical error as an integer, `within_150` as a percent with no decimal (`0.68` → `68%`). When `lab` is false, that banner is absent and the quiet line is `Held-out players were missed by about {typical_error} Elo.` The report screen does not print that line, `tail_note`, or the driver sentences. `feature` is only a React key. `direction` is not shown.
 
 3. **The board plays the file.** It sits in the landing, above the form. With no PGN, the camera is tight on the white queen and a heavy shadow falls beside her. The headline sits on that shadow. When the field holds a PGN that parses, the camera eases out over about 900ms, the heavy shadow is removed, and the full board plays the moves. White stays at the bottom of the frame. A faint contact shadow remains so the pieces sit on the squares. `/method` does not mount a board.
 
@@ -186,7 +186,7 @@ Roles, as CSS custom properties. Text contrast is against `--bg`. Square contras
 
 `prefers-contrast: more` lifts `--ink-dim` to `#D4D4CE` and `--line` to `#8A8A84`.
 
-The band is drawn in `--ink` on `--bg`. The filled span is a 2px rule. The center tick is a short vertical mark. No second hue.
+The track is a `--line` rule on `--bg`. The center tick is a short brass mark. No filled ivory span. No second hue.
 
 ### Type
 
@@ -252,18 +252,13 @@ Three motions, all optional.
 
 ### Report
 
-`/report/{id}` uses the same ground, the same type, and the same header. No canvas. The page loads `GET /v1/estimates/{id}`. A `done` body renders the report. `queued` or `running` shows `Reading the games with Stockfish, depth {depth}.` only when this page already knows `depth` from the estimate; otherwise `The read is still running.` A `failed` body shows `message`. A 404 shows `That read expired. Start it again.` with a link back to `/`.
+`/report/{id}` uses the same ground, the same type, and the same header. No canvas. The page loads `GET /v1/estimates/{id}`. A `done` body is one screen. The room is the viewport height.
 
-The report is one column, left aligned, in this order. Sections with nothing to say are absent. They are not replaced with a zero, a dash, or a card.
+`queued` or `running` shows `Reading the games with Stockfish, depth {depth}.` only when this page already knows `depth` from the estimate; otherwise `The read is still running.` A `failed` body shows `message`. A 404 shows `That read expired. Start it again.` with a link back to `/`. Those states are a single sentence.
 
-1. The lab banner, or the single quiet line when `lab` is false.
-2. The band, the center line, and the games line.
-3. The track, from the pool’s `elo_min` and `elo_max`.
-4. `tail_note`, when it is a string.
-5. The driver sentences, in order, each its own paragraph.
-6. The games in this read, only when this browser still has the checklist from the post. One row per posted index, using the `ok` line already defined: color, date, opening, result, moves. Above the rows, two tallies counted from those same rows: how many were white and black, and how many of each result string. A reload that only has the job id skips this section, because the estimate payload does not include the games.
-7. The footer `{pool label} · Stockfish depth {depth} · {revision}`, with the revision linked to `/method`.
-8. `Read another set`, linking to `/`.
+The screen is centered. The subject name, when this browser still has it. `We are centering your guess at`. The rounded center is the only `h1`. `based on these {n_games} games.` The track, when it can be drawn: a line from `elo_min` to `elo_max` and a brass tick at `q50`, with no ivory span. The range prints under the track. `Watch replays` sits at the bottom and links to `/replay`.
+
+A reload that only has the job id skips the name. `feature` is only a React key. `direction` is not shown.
 
 No other metric. Openings are names from the check, not a repertoire score. Move counts are the `moves` field, not a quality score.
 

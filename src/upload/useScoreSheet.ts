@@ -306,7 +306,7 @@ export function useScoreSheet({
       )
       if (controller.signal.aborted) return
       const held = rowsFromChecklist(games, indexes)
-      rememberPostedRead({ id: started.id, depth: jobDepth, games: held })
+      rememberPostedRead({ id: started.id, depth: jobDepth, games: held, subject: checked.subject })
       const outcome = await pollEstimate({
         id: started.id,
         signal: controller.signal,
@@ -316,7 +316,7 @@ export function useScoreSheet({
       const settled = settleRead(outcome)
       if (settled.reportId) {
         if (settled.reportId !== started.id) {
-          rememberPostedRead({ id: settled.reportId, depth: jobDepth, games: held })
+          rememberPostedRead({ id: settled.reportId, depth: jobDepth, games: held, subject: checked.subject })
         }
         navigate(`/report/${encodeURIComponent(settled.reportId)}`)
         return
