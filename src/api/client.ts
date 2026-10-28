@@ -1,11 +1,13 @@
 import { AbsentApiError, ApiError, ENGINE_DOWN, errorCode, isAbortError, POOLS_FAILED, sentenceFor } from './errors.ts'
 import { checkFromPgn } from './checkPgn.ts'
-import { healthFixture, poolsFixture } from './fixtures.ts'
+import { healthFixture, poolCardFixture, poolsFixture } from './fixtures.ts'
 import type {
+  BinRow,
   CheckedGame,
   EstimateRequest,
   GameCheck,
   Health,
+  PoolCard,
   PoolId,
   PoolSummary,
   Reason,
@@ -124,6 +126,62 @@ export async function getPools(signal: AbortSignal): Promise<PoolSummary[]> {
     return pools
   } catch (error) {
     if (error instanceof AbsentApiError) return poolsFixture
+    throw error
+  }
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function isBinRow(value: unknown): value is BinRow {
+  if (!value || typeof value !== 'object') return false
+  const row = value as BinRow
+  return (
+    typeof row.bin === 'string' &&
+    row.bin.length > 0 &&
+    isFiniteNumber(row.n) &&
+    isFiniteNumber(row.mae) &&
+    isFiniteNumber(row.bias) &&
+    isFiniteNumber(row.coverage) &&
+    isFiniteNumber(row.median_width)
+  )
+}
+
+function parsePoolCard(value: unknown): PoolCard | null {
+  if (!isPool(value)) return null
+  const card = value as PoolCard
+  if (!isPoolId(card.id)) return null
+  if (typeof card.source_label !== 'string' || card.source_label.trim().length === 0) return null
+  if (!isFiniteNumber(card.test_players)) return null
+  if (!Array.isArray(card.summary) || !card.summary.every((line) => typeof line === 'string')) return null
+  if (!Array.isArray(card.bins) || !card.bins.every(isBinRow)) return null
+  return {
+    id: card.id,
+    label: card.label,
+    available: card.available,
+    unavailable_reason: card.unavailable_reason,
+    games_required: card.games_required,
+    elo_min: card.elo_min,
+    elo_max: card.elo_max,
+    depth: card.depth,
+    revision: card.revision,
+    ship_ready: card.ship_ready,
+    source_label: card.source_label,
+    test_players: card.test_players,
+    summary: card.summary,
+    bins: card.bins,
+  }
+}
+
+export async function getPool(id: PoolId, signal: AbortSignal): Promise<PoolCard> {
+  try {
+    const body = await getJson(`/v1/pools/${encodeURIComponent(id)}`, signal)
+    const card = parsePoolCard(body)
+    if (!card || card.id !== id) throw new ApiError(200, '', '')
+    return card
+  } catch (error) {
+    if (error instanceof AbsentApiError) return poolCardFixture(id)
     throw error
   }
 }

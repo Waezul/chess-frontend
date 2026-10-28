@@ -109,6 +109,14 @@ The portrait camera has two shots. The narrow shot is used when the viewport wid
 
 On a phone, the headline stays readable beside the queen. Do not crop the queen off the frame, and do not let it cover the headline.
 
+## Method
+
+`/method` uses this same room, type, and header. It does not mount a board.
+
+The title is the pool `label`, weight 700, tight leading. Summary sentences are `--ink`, each its own paragraph, in a column about 62 characters wide (`28em` at the body size, because `62ch` is the width of 62 zeros and runs long in this face). The bin table is left aligned with that title. Bin is a row header. Players, typical miss, bias, coverage, and band width are right aligned and tabular. Row rules use `--line`. The header rule uses `--field-edge`. Bias keeps its sign in the same ivory as the other figures.
+
+The line under the table is the source caption, in `--ink-dim`: source, Stockfish depth, games required, and revision. A pool with no bins shows the summary only. Do not draw an empty chart, a card grid, or a second color.
+
 ## What the interface may say
 
 Show only data the PGN or the API actually returned. Missing names fall back to "White" and "Black". Do not invent ratings, accuracy, win rates, or charts.
