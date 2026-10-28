@@ -4,6 +4,7 @@ import { checkGames, getEstimate, postEstimate } from '../api/client.ts'
 import { CHECK_FAILED, ESTIMATE_FAILED, isAbortError, messageFrom } from '../api/errors.ts'
 import type { CheckedGame, PoolId } from '../api/types.ts'
 import { pollEstimate, settleRead } from './estimatePoll.ts'
+import { dropPostedRead, rememberPostedRead, rowsFromChecklist } from './postedRead.ts'
 import {
   canEstimate,
   firstAcceptedIndexes,
@@ -76,6 +77,7 @@ export function useScoreSheet({
   }
 
   function resetSheet(next: 'idle' | 'checking') {
+    dropPostedRead()
     submitAbort.current?.abort()
     submitAbort.current = null
     submittingRef.current = false
@@ -303,6 +305,8 @@ export function useScoreSheet({
         controller.signal,
       )
       if (controller.signal.aborted) return
+      const held = rowsFromChecklist(games, indexes)
+      rememberPostedRead({ id: started.id, depth: jobDepth, games: held })
       const outcome = await pollEstimate({
         id: started.id,
         signal: controller.signal,
@@ -311,6 +315,9 @@ export function useScoreSheet({
       if (controller.signal.aborted || outcome.type === 'cancelled') return
       const settled = settleRead(outcome)
       if (settled.reportId) {
+        if (settled.reportId !== started.id) {
+          rememberPostedRead({ id: settled.reportId, depth: jobDepth, games: held })
+        }
         navigate(`/report/${encodeURIComponent(settled.reportId)}`)
         return
       }

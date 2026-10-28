@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { ApiError } from '../src/api/errors.ts'
-import { getEstimate } from '../src/api/client.ts'
+import { getEstimate, postEstimate } from '../src/api/client.ts'
+import { AbsentApiError, ApiError } from '../src/api/errors.ts'
+import { classicalEstimate } from '../src/api/fixtures.ts'
 import {
   POLL_DEADLINE_MS,
   POLL_INTERVAL_MS,
@@ -180,10 +181,31 @@ test('429 and 503 stop the poll and surface the server sentence', async () => {
   })
 })
 
+test('a missing engine does not invent a queued job', async () => {
+  const previous = globalThis.fetch
+  globalThis.fetch = async () => {
+    throw new TypeError('Failed to fetch')
+  }
+  try {
+    await assert.rejects(
+      postEstimate(
+        { pool: 'classical', pgn: '1. e4 e5', subject: 'SomeName', game_indexes: [0] },
+        new AbortController().signal,
+      ),
+      (error: unknown) => error instanceof AbsentApiError,
+    )
+  } finally {
+    globalThis.fetch = previous
+  }
+})
+
 test('getEstimate accepts a done job and a failed sentence', async () => {
   const previous = globalThis.fetch
   const bodies = new Map<string, { status: number; body: unknown }>([
-    ['http://127.0.0.1:8000/v1/estimates/job_done', { status: 200, body: { id: 'job_done', status: 'done', estimate: { q50: 1706 } } }],
+    [
+      'http://127.0.0.1:8000/v1/estimates/job_done',
+      { status: 200, body: { id: 'job_done', status: 'done', estimate: classicalEstimate } },
+    ],
     [
       'http://127.0.0.1:8000/v1/estimates/job_bad',
       {
@@ -213,6 +235,7 @@ test('getEstimate accepts a done job and a failed sentence', async () => {
     assert.deepEqual(await getEstimate('job_done', new AbortController().signal), {
       id: 'job_done',
       status: 'done',
+      estimate: classicalEstimate,
     })
     assert.deepEqual(await getEstimate('job_bad', new AbortController().signal), {
       id: 'job_bad',

@@ -106,7 +106,7 @@ export function ReplayPage() {
           {creating ? (
             <div className="replay-readout" role="status">
               <p className="replay-game">Creating the replay.</p>
-              <div className="replay-progress" aria-hidden="true">
+              <div className="progress-track" aria-hidden="true">
                 <span />
               </div>
             </div>

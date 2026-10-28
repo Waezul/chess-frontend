@@ -29,6 +29,7 @@ export function EstimateControl({
   const healthId = useId()
   const checkId = useId()
   const submitId = useId()
+  const blockRef = useRef<HTMLDivElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
   const estimateRef = useRef<HTMLButtonElement>(null)
   const returnFocus = useRef(false)
@@ -38,11 +39,13 @@ export function EstimateControl({
     if (waitCopy) {
       returnFocus.current = true
       cancelRef.current?.focus({ preventScroll: true })
+      blockRef.current?.scrollIntoView({ block: 'nearest' })
       return
     }
     if (!returnFocus.current) return
     returnFocus.current = false
     estimateRef.current?.focus({ preventScroll: true })
+    blockRef.current?.scrollIntoView({ block: 'nearest' })
   }, [waitCopy])
 
   if (gamesRequired == null && !healthNotice && !checkError && !submitError && !waitCopy) return null
@@ -56,12 +59,15 @@ export function EstimateControl({
     .join(' ')
 
   return (
-    <div className="estimate-block">
+    <div className="estimate-block" ref={blockRef}>
       {waitCopy ? (
         <div className="estimate-status">
-          <p className="estimate-wait" role="status">
+          <p className="estimate-wait" role="status" aria-busy="true">
             {waitCopy}
           </p>
+          <div className="progress-track" aria-hidden="true">
+            <span />
+          </div>
           <button ref={cancelRef} type="button" className="text-button" onClick={onCancel}>
             Cancel
           </button>
