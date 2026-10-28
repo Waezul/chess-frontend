@@ -64,7 +64,37 @@ export type StartedJob = {
   status: 'queued' | 'running'
 }
 
+export type Driver = {
+  feature: string
+  direction: 'higher' | 'lower'
+  text: string
+}
+
+export type Estimate = {
+  pool: PoolId
+  revision: string
+  ship_ready: boolean
+  lab: boolean
+  n_games: number
+  depth: number
+  q10: number
+  q50: number
+  q90: number
+  drivers: Driver[]
+  limits: {
+    typical_error: number
+    within_150: number
+    coverage: number
+    tail_note: string | null
+  }
+}
+
 export type PolledJob =
   | { id: string; status: 'queued' | 'running' }
   | { id: string; status: 'done' }
+  | { id: string; status: 'failed'; message: string }
+
+export type EstimateJob =
+  | { id: string; status: 'queued' | 'running' }
+  | { id: string; status: 'done'; estimate: Estimate }
   | { id: string; status: 'failed'; message: string }
