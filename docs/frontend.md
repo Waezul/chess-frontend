@@ -82,20 +82,20 @@ A reload of `/report/{id}` that only has the job id still shows the band when th
 
 | State | What is on screen |
 | --- | --- |
-| `idle` | Picker, empty paste, button disabled. |
-| `checking` | Paste and name stay editable. Checklist slot says `Reading headers.` A newer edit supersedes the check in flight. |
+| `idle` | Picker, empty PGN, button disabled. |
+| `checking` | Name and PGN stay editable. Checklist slot says `Reading headers.` A newer edit supersedes the check in flight. |
 | `ready` | Checklist filled. Button enabled only at `games_required` ticks. |
 | `queued` / `running` | Button hidden. Wait copy. Cancel returns to `ready`. |
-| `done` | `ready`, plus the result block. |
-| `failed` | `ready`, plus one error sentence. |
+| `done` | Navigate to `/report/{id}`. Landing does not keep a result block. |
+| `failed` | `ready`, plus one error sentence under the button. |
 
-Debounce `games:check` by 400 ms after the PGN or the subject name changes. Do not check an empty paste. A new check increments a request id and ignores stale responses. Changing the pool clears the checklist, the job, and the result, then checks again at once if the paste and the name are both non-empty. Acceptance depends on the pool.
+Debounce `games:check` by 400 ms after the PGN or the subject name changes. Do not check an empty PGN. A new check increments a request id and ignores stale responses. Changing the pool clears the checklist, the job, and any in-flight read, then checks again at once if the PGN and the name are both non-empty. Acceptance depends on the pool.
 
-Poll `GET /v1/estimates/{id}` every 1 second. Stop on `done` or `failed`. Stop after 90 seconds, drop the id, and show `The read took too long. Try again.` Cancel also drops the id. There is no cancel route.
+Poll `GET /v1/estimates/{id}` every 1 second. Stop on `done` or `failed`. Stop after 90 seconds, drop the id, and show `The read took too long. Try again.` Cancel also drops the id. There is no cancel route. On `done`, the landing navigates to `/report/{id}`; that page loads the same id again for the estimate body.
 
 ## HTTP
 
-Base URL comes from the environment. JSON only. No API key. Send `Content-Type: application/json`.
+Base URL comes from the environment (`VITE_API_BASE_URL`, default `http://127.0.0.1:8000`). JSON only. No API key. Send `Content-Type: application/json`.
 
 | Call | When | Success |
 | --- | --- | --- |
@@ -104,7 +104,7 @@ Base URL comes from the environment. JSON only. No API key. Send `Content-Type: 
 | `GET /v1/pools/{pool}` | `/method`, and when the picker changes | `200` |
 | `POST /v1/games:check` | PGN or subject changed | `200` |
 | `POST /v1/estimates` | Button | `202` |
-| `GET /v1/estimates/{id}` | Every 1 s until done | `200` |
+| `GET /v1/estimates/{id}` | Every 1 s until done on `/`, and again on `/report/{id}` | `200` |
 
 Error body, for every 4xx and 5xx:
 
