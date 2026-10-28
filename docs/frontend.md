@@ -542,11 +542,13 @@ That done payload displays on `/report/{id}` as **1480–1960**, center **1710**
 
 ## Done when
 
-- Pools, including a disabled blitz row, render from `GET /v1/pools`.
-- The button stays off until eight accepted games are ticked, and it posts those indexes.
+- Pools, including disabled blitz and bullet rows, render from `GET /v1/pools`.
+- The button stays off until `games_required` accepted games are ticked, and it posts those indexes. Label uses `Estimate from these {games_required}`.
 - A blitz game in a classical export shows `wrong_pool` and cannot be ticked.
-- The result prints the rounded band, the lab banner, the server’s driver sentences, and the revision footer.
-- `/method` matches both fixture cards, including the bias signs.
-- Switching from classical to rapid re-checks the same paste, and a rapid game moves from `wrong_pool` to `ok`.
+- On `done`, `/` navigates to `/report/{id}`. The report prints the rounded band (center + range + q50 track) and `Watch replays`. It does not print lab banner, drivers, or revision footer.
+- Reloading `/report/{id}` after the checklist is gone still shows the band when the job is `done`.
+- `/method` matches both fixture cards, including the bias signs, and mounts no board.
+- Switching from classical to rapid re-checks the same PGN, and a rapid game moves from `wrong_pool` to `ok`.
 - Engine down disables the estimate and leaves the checklist usable.
-- A 90 second poll and a cancel both return to the checklist with no band.
+- A 90 second poll and a cancel both return to the checklist with no band on `/`.
+- `/replay` plays from the landing watch control and from the report link.
