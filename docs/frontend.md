@@ -7,31 +7,36 @@ Two cards are live, both eight games at Stockfish depth 10:
 - Lichess classical, February 2017, revision `classical8-v1`.
 - Lichess rapid, September 2026, revision `rapid8-v2`.
 
-`ship_ready` is false on both. Show the band, and show the lab banner. Blitz and bullet are listed by `GET /v1/pools` as unavailable.
+`ship_ready` is false on both. The estimate payload still carries `lab: true`. The report screen does not print a lab banner. Blitz and bullet are listed by `GET /v1/pools` as unavailable.
 
 `depth` is always the Stockfish search depth. The revision string names the model. It is not a depth.
 
 Client routes:
 
-- `/` is the tool.
+- `/` is the landing and the upload tool.
+- `/report/{id}` is the finished read. `{id}` is the job id from `POST /v1/estimates`.
+- `/replay` plays the uploaded PGN on the board.
 - `/method` is the model card. Render it from `GET /v1/pools/{pool}`. Do not hardcode the metrics.
 
 ## Screen
 
-Build `/` as one column, in this order.
+Build `/` as the landing: queen portrait and headline first, then one upload column under it, in this order.
 
-1. Pool picker. One radio per pool from `GET /v1/pools`. `available: false` is visible and disabled, with `unavailable_reason` beside it.
-2. Subject name. The White or Black header this person played under. Sent to the server and not shown again.
-3. PGN. A text area and a `.pgn` file drop. Read the file as UTF-8 text and store it in the same field. Cap the client at 2 MB before posting.
-4. Checklist. Empty until a check succeeds. Each accepted game has a checkbox. Refused games are visible, unchecked, and not checkable.
-5. Button. Label: `Estimate from these 8`. Disabled until the number of ticked games equals `games_required` on the selected pool.
-6. Wait. Replaces the button while a job is in flight. Copy: `Reading the games with Stockfish, depth {depth}.` A cancel control stops polling and leaves the checklist as it was.
-7. Result. Renders under the form when the job is `done`. A new check clears it.
+1. Pool picker. One radio per pool from `GET /v1/pools`, in that order. `available: false` is visible and disabled, with `unavailable_reason` beside it.
+2. Subject. Label: `Username you played under`. Sent to the server. On the report, show that name again only when this browser still has it for the job id.
+3. PGN. A drop target (drop or browse). Read the file as UTF-8 text and store it in the same field used for checks and estimates. Cap the client at 2,097,152 bytes before posting. Hint under the control: `A PGN is the text record of the games.` There is no paste textarea on this iteration.
+4. Checklist. Empty until a check succeeds. Title: `Select games`. While checking, the count line says `Reading headers.` Each accepted game has a checkbox. Refused games are visible, unchecked, and not checkable. Show a live count `{ticked} of {games_required} selected`. Offer `Select the first {games_required}` when the sheet is visible.
+5. Watch (optional). When at least one watched accepted game is available, a text control `Watch the game` / `Watch the games` navigates to `/replay`. It does not start an estimate.
+6. Button. Label: `Estimate from these {games_required}` (on the live pools that reads `Estimate from these 8`). Disabled until the number of ticked games equals `games_required` on the selected pool.
+7. Wait. Replaces the button while a job is in flight. Copy: `Reading the games with Stockfish, depth {depth}.` A cancel control stops polling and leaves the checklist as it was.
 8. Failure. One sentence under the button. The checklist stays.
+9. Done. Do not render the band on `/`. On `done`, navigate to `/report/{id}`.
 
-The name row can load that player's latest rated games from Lichess and write them into the PGN field. The subject becomes the username. [plan.md](plan.md) specifies the request, the 30-game cap, and the optional Lichess login. The check and the estimate still post the same `pgn` and `subject`. This client calls Lichess. The Queen's Range API does not.
+Headline on `/`: `Get your Elo guessed.` Support line on this iteration: `Upload your games. Discover your estimated playing strength. The 10–90% band is the low and high of that guess, not how sure the model is.`
 
-`/method` is a separate page for the selected pool, linked from the result footer and from the header.
+The name row can load that player's latest rated games from Lichess and write them into the PGN field. The subject becomes the username. [plan.md](plan.md) specifies the request, the 30-game cap, and the optional Lichess login. The check and the estimate still post the same `pgn` and `subject`. This client calls Lichess. The Queen's Range API does not. Connect with Lichess is specified in plan.md and is not required for this document’s Done when until that control ships.
+
+`/method` is a separate page for the selected pool, linked from the header (`How it works`). `/replay` is linked from the landing watch control and from the report.
 
 ## What the result shows
 
