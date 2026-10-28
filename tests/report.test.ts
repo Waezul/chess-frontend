@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { getEstimate } from '../src/api/client.ts'
-import { ApiError } from '../src/api/errors.ts'
+import { ApiError, POOLS_FAILED } from '../src/api/errors.ts'
 import { classicalEstimate, poolsFixture } from '../src/api/fixtures.ts'
 import type { Estimate } from '../src/api/types.ts'
 import { loadReport } from '../src/report/loadReport.ts'
@@ -11,6 +11,9 @@ import {
   READ_ANOTHER,
   STILL_RUNNING,
   placeOnTrack,
+  CENTERING_LEAD,
+  centeringGames,
+  reportBeats,
   reportBlocks,
   runningText,
   type ReportBlock,
@@ -218,9 +221,10 @@ test('posted rows tally White, Black, and each result, and a dropped checklist o
   })
   assert.equal(without.some((block) => block.type === 'games'), false)
 
-  rememberPostedRead({ id: 'job_01', depth: 10, games: rows })
+  rememberPostedRead({ id: 'job_01', depth: 10, games: rows, subject: '  kurald_galain  ' })
   assert.equal(postedReadFor('job_other'), null)
   const held = postedReadFor('job_01')
+  assert.equal(held?.subject, 'kurald_galain')
   const withRows = reportBlocks({
     estimate: classicalEstimate,
     pool: classical,
@@ -244,6 +248,46 @@ test('posted rows tally White, Black, and each result, and a dropped checklist o
 
   dropPostedRead()
   assert.equal(postedReadFor('job_01'), null)
+})
+
+test('the finished read is the opening screen', () => {
+  assert.equal(CENTERING_LEAD, 'We are centering your guess at')
+  assert.equal(centeringGames(8), 'based on these 8 games.')
+  assert.equal(centeringGames(1), 'based on this game.')
+  const beats = reportBeats(
+    reportBlocks({
+      estimate: classicalEstimate,
+      pool: classical,
+      poolNotice: null,
+      games: null,
+    }),
+  )
+  assert.deepEqual(
+    beats.map((beat) => beat.type),
+    ['opening'],
+  )
+  const opening = beats[0]
+  assert.equal(opening?.type, 'opening')
+  if (opening?.type !== 'opening') return
+  assert.equal(opening.headline.figure, '1710')
+  assert.equal(opening.headline.range, '1480\u20131960')
+  assert.equal(opening.headline.played, 'based on these 8 games.')
+  assert.equal(opening.track?.min, 800)
+  assert.equal(JSON.stringify(beats).includes('"feature"'), false)
+
+  const missing = reportBeats(
+    reportBlocks({
+      estimate: classicalEstimate,
+      pool: null,
+      poolNotice: POOLS_FAILED,
+      games: null,
+    }),
+  )
+  assert.deepEqual(
+    missing.map((beat) => beat.type),
+    ['opening'],
+  )
+  assert.equal(missing[0]?.track, null)
 })
 
 test('running copy names the depth only when this page already knows it', () => {

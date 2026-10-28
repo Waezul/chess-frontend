@@ -39,21 +39,13 @@ The band is the claim. The median sits inside it.
 
 Display `q10`, `q50`, and `q90` rounded to the nearest 10. Keep the unrounded values off the page. A payload of 1483 / 1706 / 1958 reads **1480–1960**, center **1710**.
 
-Headline: `{q10}–{q90}`. Second line: `Center {q50}.` Third line: `{n_games} rated {pool label} games.`
+The largest type is the rounded center. The range `{q10}–{q90}` prints smaller, on the same screen as the track.
 
-When `lab` is true, a banner above the headline:
+A finished read is one screen.
 
-> Lab estimate. Held-out players were missed by about {limits.typical_error} Elo, and {within_150 percent} of them landed within 150. The ends of the ladder pull inward.
+Centered. The subject name when this browser still has it. `We are centering your guess at`. The center figure. `based on these {n_games} games.` The track, with a brass tick and no ivory span. The range under the track. `Watch replays` at the bottom, linking to `/replay`.
 
-When `lab` is false, omit that banner. Still show one quiet line: `Held-out players were missed by about {limits.typical_error} Elo.`
-
-If `limits.tail_note` is a string, show it under the headline. If it is null, show nothing. Do not invent tail copy from `q50`.
-
-Then up to three driver lines. Render `drivers[].text` in order. Ignore `feature` except as a React key. Do not write your own sentences from feature names.
-
-Footer, from the done payload, and it must match the card: `{pool label} · Stockfish depth {depth} · {revision}`. Link the revision text to `/method`.
-
-Draw the band on a track from `elo_min` to `elo_max` on the pool (800 to 2400 for both live pools). Mark `q10`, `q50`, and `q90`. If a quantile falls outside the track, keep the printed numbers and clip the mark to the track edge.
+Draw the track from `elo_min` to `elo_max` on the pool (800 to 2400 for both live pools). A brass tick marks `q50`. The range prints under the track. If a quantile falls outside the track, keep the printed numbers and clip the mark to the track edge.
 
 ## What the page leaves out
 
