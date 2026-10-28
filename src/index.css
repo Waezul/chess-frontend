@@ -356,6 +356,106 @@ a {
   color: var(--ink-dim);
 }
 
+.page.method {
+  min-width: 0;
+  padding-right: max(var(--page-pad), env(safe-area-inset-right));
+  padding-bottom: max(4rem, env(safe-area-inset-bottom));
+}
+
+.method h1 {
+  max-width: 18ch;
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  text-wrap: pretty;
+}
+
+.method p.method-summary {
+  max-width: 28em;
+  margin-top: 0.9rem;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.method h1 + p.method-summary {
+  margin-top: 1.35rem;
+}
+
+.method p.method-status,
+.method p.method-error {
+  max-width: 28em;
+  margin-top: 0;
+}
+
+.method p.method-status {
+  color: var(--ink-dim);
+}
+
+.method p.method-error {
+  color: var(--error);
+}
+
+.method-proof {
+  margin: 2.5rem 0 0;
+  max-width: 100%;
+}
+
+.method-table-scroll {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.method-table-scroll:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.method-proof table {
+  width: max-content;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.method-proof th,
+.method-proof td {
+  padding: 0.65rem 1.15rem 0.65rem 0;
+  border-bottom: 1px solid var(--line);
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: left;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.method-proof th:last-child,
+.method-proof td:last-child {
+  padding-right: 0;
+}
+
+.method-proof thead th {
+  font-weight: 600;
+  border-bottom-color: var(--field-edge);
+}
+
+.method-proof .num {
+  text-align: right;
+}
+
+.method-proof tbody th {
+  font-weight: 400;
+}
+
+.method-source {
+  max-width: 100%;
+  margin: 1rem 0 0;
+  color: var(--ink-dim);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
 @keyframes portrait-in {
   from {
     opacity: 0;
@@ -441,6 +541,15 @@ a {
   .field-input:hover,
   .drop:hover {
     background: Canvas;
+  }
+
+  .method-proof th,
+  .method-proof td,
+  .method-source,
+  .method p.method-summary,
+  .method p.method-error {
+    color: CanvasText;
+    border-color: CanvasText;
   }
 }
 

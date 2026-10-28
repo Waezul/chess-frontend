@@ -19,6 +19,22 @@ export type PoolSummary = {
   ship_ready: boolean
 }
 
+export type BinRow = {
+  bin: string
+  n: number
+  mae: number
+  bias: number
+  coverage: number
+  median_width: number
+}
+
+export type PoolCard = PoolSummary & {
+  source_label: string
+  test_players: number
+  bins: BinRow[]
+  summary: string[]
+}
+
 export type ApiFailure = {
   error: string
   message: string

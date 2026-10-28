@@ -14,6 +14,8 @@ const SENTENCES: Record<string, string> = {
 
 export const POOLS_FAILED = 'The time controls could not be loaded. Reload the page and try again.'
 
+export const METHOD_FAILED = 'This model could not be loaded. Reload the page and try again.'
+
 export const FILE_TOO_LARGE = 'That file is over 2 MB.'
 
 export const ENGINE_DOWN = SENTENCES.engine_down
