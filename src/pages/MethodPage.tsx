@@ -40,7 +40,7 @@ export function MethodPage() {
 
   return (
     <div className="room">
-      <SiteHeader />
+      <SiteHeader backTo="/" backLabel="Get your Elo guessed" />
       <main className="page method" aria-busy={phase === 'loading'}>
         {phase === 'loading' ? (
           <p className="method-status" role="status">

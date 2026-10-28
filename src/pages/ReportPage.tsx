@@ -140,7 +140,7 @@ export function ReportPage() {
 
   return (
     <div className="room">
-      <SiteHeader />
+      <SiteHeader backTo="/" backLabel="Get your Elo guessed" />
       <main
         className="page report"
         ref={mainRef}
