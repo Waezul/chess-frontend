@@ -265,13 +265,13 @@ On the wire, a failed job is still `{ status: "failed", error, message }` and a 
 
 ## Checklist copy
 
-Render `reason` with these sentences. Names, date, opening, result, and move count can sit on the row. Elo must not, and it is absent from the payload on purpose.
+Render refused `reason` values with these sentences. Names, date, opening, result, and move count can sit on the row. Elo must not, and it is absent from the payload on purpose.
 
-`{id}` is the selected pool's `id` and `{label}` is its `label`, so one component serves every pool.
+`{label}` is the selected pool's `label`.
 
 | `reason` | Copy |
 | --- | --- |
-| `ok` | Rated {id}, finished, standard chess. |
+| `ok` | (no refusal sentence; accepted rows are checkable) |
 | `wrong_pool` | This game is another time control. The loaded model is {label}. |
 | `unrated` | Unrated and correspondence games are refused. |
 | `unfinished` | The game did not end normally, so the move record is cut short. |
@@ -279,16 +279,18 @@ Render `reason` with these sentences. Names, date, opening, result, and move cou
 | `name_missing` | Neither header matches the subject. |
 | `too_short` | The subject has fewer than 10 moves. |
 
-For `ok`, prefix the color: `White` or `Black`. Example row: `White · 2017.02.14 · Italian Game · 1-0 · 42 moves`.
+Accepted rows show game facts (opening, date, result, moves, color), not the old `Rated {id}, finished, standard chess.` sentence. A compact line used when a game list is built elsewhere is still `White · 2017.02.14 · Italian Game · 1-0 · 42 moves` (`gameLine`).
 
 ## Method page
 
 Render only fields on `PoolCard`.
 
 - Title: `{label}`.
-- The lab banner from the tool stays on `/` only. On `/method`, print each string in `summary` as its own paragraph. The server writes those sentences.
+- Print each string in `summary` as its own paragraph. The server writes those sentences.
 - A table of `bins`: bin, players (`n`), typical miss (`mae`), bias, coverage, band width (`median_width`).
-- A line under the table: `{source_label}. Stockfish depth {depth}. {games_required} games. Revision {revision}.`
+- Footer / caption: `{source_label}. Stockfish depth {depth}. {games_required} games. Revision {revision}.`
+- Disabled pools still return 200 with empty `bins` and a thin card; render that payload, do not invent metrics.
+- No board on `/method`.
 
 ## Fixtures
 
