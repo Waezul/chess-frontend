@@ -294,7 +294,7 @@ Render only fields on `PoolCard`.
 
 ## Fixtures
 
-Use these while the API is absent. Swap them for the network without changing components. The numbers are the scored eight-game tests: classical from `notebooks/train_player8_trained.ipynb`, rapid from `notebooks/train_player8_trainedv2.ipynb`.
+Use these while the API is absent. Swap them for the network without changing components. The numbers are the scored eight-game tests: classical from `notebooks/train_player8_trained.ipynb`, rapid from `notebooks/train_player8_trainedv2.ipynb`. Client stand-ins live in `src/api/fixtures.ts` and must stay in sync with this section.
 
 `GET /v1/health`
 
@@ -335,7 +335,19 @@ Use these while the API is absent. Swap them for the network without changing co
       "id": "blitz",
       "label": "Lichess blitz",
       "available": false,
-      "unavailable_reason": "No blitz model is trained yet.",
+      "unavailable_reason": "Coming Soon.",
+      "games_required": 8,
+      "elo_min": 800,
+      "elo_max": 2400,
+      "depth": 10,
+      "revision": null,
+      "ship_ready": false
+    },
+    {
+      "id": "bullet",
+      "label": "Lichess bullet",
+      "available": false,
+      "unavailable_reason": "Coming Soon.",
       "games_required": 8,
       "elo_min": 800,
       "elo_max": 2400,
@@ -526,7 +538,7 @@ Done:
 }
 ```
 
-That done payload displays as **1480–1960**, center **1710**, with the lab banner. For a tail fixture, set `q50` to `980` and `tail_note` to `Players this far below the middle were often guessed high.`
+That done payload displays on `/report/{id}` as **1480–1960**, center **1710**. The payload still has `lab: true` and drivers; the report screen does not print them. For a tail fixture, set `q50` to `980` and `tail_note` to `Players this far below the middle were often guessed high.` (`tail_note` remains off the report UI in this iteration.)
 
 ## Done when
 
