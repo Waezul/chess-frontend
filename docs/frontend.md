@@ -40,24 +40,43 @@ The name row can load that player's latest rated games from Lichess and write th
 
 ## What the result shows
 
-The band is the claim. The median sits inside it.
+The band is the claim. The median sits inside it. The finished read is `/report/{id}`, not the landing.
 
 Display `q10`, `q50`, and `q90` rounded to the nearest 10. Keep the unrounded values off the page. A payload of 1483 / 1706 / 1958 reads **1480–1960**, center **1710**.
 
 The largest type is the rounded center. The range `{q10}–{q90}` prints smaller, on the same screen as the track.
 
-A finished read is one screen.
+`/report/{id}` loads `GET /v1/estimates/{id}`.
 
-Centered. The subject name when this browser still has it. `We are centering your guess at`. The center figure. `based on these {n_games} games.` The track, with a brass tick and no ivory span. The range under the track. `Watch replays` at the bottom, linking to `/replay`.
+- `queued` or `running`: show `Reading the games with Stockfish, depth {depth}.` when this page already knows `depth` from the posted read; otherwise `The read is still running.`
+- `failed`: show `message` (prefer the server string; see error rules below).
+- `404` / unknown job: `That read expired.` with a link back to `/` labeled `Start it again.`
+- `done`: one centered screen.
 
-Draw the track from `elo_min` to `elo_max` on the pool (800 to 2400 for both live pools). A brass tick marks `q50`. The range prints under the track. If a quantile falls outside the track, keep the printed numbers and clip the mark to the track edge.
+Centered done screen, in order:
+
+1. The subject name when this browser still has it for that job id.
+2. `We are centering your guess at`
+3. The center figure (rounded `q50`)
+4. `based on these {n_games} games.` (singular: `based on this game.` when `n_games` is 1)
+5. The track, with a brass tick at `q50` and no ivory span
+6. The range under the track
+7. `Watch replays` linking to `/replay`
+
+Draw the track from `elo_min` to `elo_max` on the pool (800 to 2400 for both live pools). A brass tick marks `q50`. If a quantile falls outside the track, keep the printed numbers and clip the mark to the track edge.
+
+The estimate payload may still include `lab`, `drivers`, `limits.tail_note`, and `revision`. This iteration’s report UI does not print the lab line, driver sentences, tail note, posted game list, or revision footer. `feature` is only a React key when drivers are handled in code. `direction` is not shown.
+
+A reload of `/report/{id}` that only has the job id still shows the band when the job is `done`. It does not invent a game list.
 
 ## What the page leaves out
 
 - A cheat score, a confidence percent, or a “you are 1710” badge.
-- The subject’s rating, the opponent’s rating, or who won, as inputs or as outputs.
-- Blitz, bullet, Chess.com, or an unrated game scored on the classical card. Those fail in the checklist.
-- Any averaging of one-game guesses. The button sends eight indexes. The server averages features, then scores once.
+- The subject’s rating, the opponent’s rating, or who won, as inputs or as outputs on the landing, checklist, board, or report.
+- Blitz, bullet, Chess.com, or an unrated game scored on the classical card. Those fail in the checklist. Blitz and bullet stay visible and disabled in the picker.
+- Any averaging of one-game guesses. The button sends `games_required` indexes. The server averages features, then scores once.
+- Lab banner, driver sentences, tail note, and revision footer on the report screen (payload fields may still arrive).
+- Hardcoded model metrics on `/method` (test-player counts, bins, depth, revision). Those render from `GET /v1/pools/{pool}`.
 
 ## Form states
 
