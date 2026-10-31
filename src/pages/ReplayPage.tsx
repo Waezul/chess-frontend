@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChessStage } from '../board/ChessStage.tsx'
 import { parsePgnReel, positionAt, selectPgn, turnLabel } from '../board/pgnReel.ts'
 import type { ReplayGame } from '../board/types.ts'
 import { useReducedMotion } from '../board/useReducedMotion.ts'
+import { ReadStatus } from '../components/ReadStatus.tsx'
 import { SiteHeader } from '../components/SiteHeader.tsx'
 import { useUpload } from '../upload/UploadProvider.tsx'
 import { watchLimit, watchedIndexes } from '../upload/scoreSheet.ts'
@@ -34,6 +35,15 @@ export function ReplayPage() {
   const ply = game ? Math.min(placed.ply, game.moves.length) : 0
   const pose = useMemo(() => (game ? positionAt(game, ply) : null), [game, ply])
   const creating = indexes.length > 0 && reel === null
+  const [followed, setFollowed] = useState(sheet.reading || sheet.reportId != null)
+  if ((sheet.reading || sheet.reportId) && !followed) setFollowed(true)
+  const statusRef = useRef<HTMLParagraphElement>(null)
+  const readyRef = useRef<HTMLAnchorElement>(null)
+  const playRef = useRef<HTMLButtonElement>(null)
+  const stayWithRead = useRef(false)
+  const announced = useRef(false)
+  const readError = followed ? sheet.submitError : null
+  const showRead = !creating && (sheet.reading || Boolean(sheet.reportId) || Boolean(readError))
 
   useEffect(() => {
     if (indexes.length === 0) {
@@ -60,6 +70,29 @@ export function ReplayPage() {
   }, [form.pgn, indexKey, indexes])
 
   useEffect(() => {
+    if (!sheet.reading) {
+      if (!sheet.reportId) announced.current = false
+      return
+    }
+    if (creating || announced.current) return
+    announced.current = true
+    statusRef.current?.focus({ preventScroll: true })
+  }, [creating, sheet.reading, sheet.reportId])
+
+  useEffect(() => {
+    if (sheet.reading || !stayWithRead.current) return
+    if (sheet.reportId) {
+      stayWithRead.current = false
+      readyRef.current?.focus({ preventScroll: true })
+      return
+    }
+    if (readError) {
+      stayWithRead.current = false
+      statusRef.current?.focus({ preventScroll: true })
+    }
+  }, [readError, sheet.reading, sheet.reportId])
+
+  useEffect(() => {
     if (!playing || paused || !game) return
     if (ply >= game.moves.length) {
       setPausedPgn(form.pgn)
@@ -76,6 +109,11 @@ export function ReplayPage() {
     const next = Math.min(Math.max(ply + delta, 0), game.moves.length)
     setSpot({ pgn: form.pgn, game: gameIndex, ply: next })
     setPausedPgn(form.pgn)
+  }
+
+  function cancelRead() {
+    sheet.cancelRead()
+    window.setTimeout(() => playRef.current?.focus({ preventScroll: true }), 0)
   }
 
   function togglePlay() {
@@ -103,15 +141,16 @@ export function ReplayPage() {
       </div>
       <main>
         <section className="portrait">
+          <div className="replay-readout">
           {creating ? (
-            <div className="replay-readout" role="status">
+            <div role="status">
               <p className="replay-game">Creating the replay.</p>
               <div className="progress-track" aria-hidden="true">
                 <span />
               </div>
             </div>
           ) : playing && game && pose ? (
-            <div className="replay-readout">
+            <>
               {games.length > 1 ? (
                 <label className="replay-picker">
                   <select
@@ -142,7 +181,7 @@ export function ReplayPage() {
                 <button type="button" className="text-button" onClick={() => step(-1)} disabled={ply === 0}>
                   Back
                 </button>
-                <button type="button" className="text-button" onClick={togglePlay}>
+                <button ref={playRef} type="button" className="text-button" onClick={togglePlay}>
                   {paused ? 'Play replay' : 'Pause replay'}
                 </button>
                 <button
@@ -154,17 +193,42 @@ export function ReplayPage() {
                   Forward
                 </button>
               </div>
-            </div>
+            </>
           ) : (
-            <div className="replay-readout">
+            <>
               <p className="replay-game">
                 {form.pgn.trim() ? 'Select games to watch them here.' : 'Choose a PGN to watch it here.'}
               </p>
               <Link to="/" className="text-button">
                 {form.pgn.trim() ? 'Choose games' : 'Choose a PGN'}
               </Link>
-            </div>
+            </>
           )}
+          {showRead ? (
+            <div
+              className="read-focus"
+              onFocusCapture={() => {
+                stayWithRead.current = true
+              }}
+              onBlurCapture={(event) => {
+                const next = event.relatedTarget
+                if (next instanceof Node && event.currentTarget.contains(next)) return
+                if (next == null) return
+                stayWithRead.current = false
+              }}
+            >
+              <ReadStatus
+                reading={sheet.reading}
+                depth={sheet.readDepth}
+                reportId={sheet.reportId}
+                error={readError}
+                onCancel={cancelRead}
+                readyRef={readyRef}
+                statusRef={statusRef}
+              />
+            </div>
+          ) : null}
+          </div>
         </section>
       </main>
     </div>

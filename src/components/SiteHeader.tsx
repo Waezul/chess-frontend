@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { QueenMark } from './QueenMark.tsx'
 
 const POINTER_LINKS = '.wordmark, .method-link, .back-link'
 
@@ -69,6 +70,7 @@ export function SiteHeader({ overlay = false, backTo, backLabel }: SiteHeaderPro
           </Link>
         ) : null}
         <Link to="/" className="wordmark" aria-current={pathname === '/' ? 'page' : undefined}>
+          <QueenMark className="wordmark-mark" />
           Queen's Range
         </Link>
       </div>

@@ -171,7 +171,7 @@ test('getPool uses the network card and the fixture only when the API is absent'
     const fallback = await getPool('bullet', signal)
     assert.equal(fallback.available, false)
     assert.deepEqual(fallback.bins, [])
-    assert.deepEqual(fallback.summary, ['Coming Soon.'])
+    assert.deepEqual(fallback.summary, ['Coming soon.'])
   } finally {
     globalThis.fetch = previous
   }

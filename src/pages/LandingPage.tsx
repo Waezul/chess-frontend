@@ -62,8 +62,7 @@ export function LandingPage() {
                 guessed.
               </h1>
               <p>
-                Upload your games. Discover your estimated playing strength. The 10–90% band is the low
-                and high of that guess, not how sure the model is.
+                Upload your games. Discover your estimated playing strength by our model and watch replays of your games.
               </p>
             </div>
           </div>
@@ -125,6 +124,7 @@ export function LandingPage() {
               submitting={sheet.submitting}
               reading={sheet.reading}
               depth={sheet.readDepth}
+              reportId={sheet.reportId}
               healthNotice={form.healthNotice}
               checkError={sheet.checkError}
               submitError={sheet.submitError}

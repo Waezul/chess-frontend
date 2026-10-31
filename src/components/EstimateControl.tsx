@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
-import { readingLabel } from '../upload/estimatePoll.ts'
+import { ReadStatus } from './ReadStatus.tsx'
 
 type EstimateControlProps = {
   gamesRequired: number | null
@@ -7,6 +7,7 @@ type EstimateControlProps = {
   submitting: boolean
   reading: boolean
   depth: number | null
+  reportId: string | null
   healthNotice: string | null
   checkError: string | null
   submitError: string | null
@@ -20,6 +21,7 @@ export function EstimateControl({
   submitting,
   reading,
   depth,
+  reportId,
   healthNotice,
   checkError,
   submitError,
@@ -32,23 +34,27 @@ export function EstimateControl({
   const blockRef = useRef<HTMLDivElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
   const estimateRef = useRef<HTMLButtonElement>(null)
+  const readyRef = useRef<HTMLAnchorElement>(null)
   const returnFocus = useRef(false)
-  const waitCopy = reading && depth != null && Number.isFinite(depth) ? readingLabel(depth) : null
 
   useEffect(() => {
-    if (waitCopy) {
+    if (reading) {
       returnFocus.current = true
       cancelRef.current?.focus({ preventScroll: true })
       blockRef.current?.scrollIntoView({ block: 'nearest' })
       return
     }
-    if (!returnFocus.current) return
-    returnFocus.current = false
-    estimateRef.current?.focus({ preventScroll: true })
-    blockRef.current?.scrollIntoView({ block: 'nearest' })
-  }, [waitCopy])
+    if (returnFocus.current) {
+      returnFocus.current = false
+      const target = reportId ? readyRef.current : estimateRef.current
+      target?.focus({ preventScroll: true })
+      blockRef.current?.scrollIntoView({ block: 'nearest' })
+      return
+    }
+    if (reportId) blockRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [reading, reportId])
 
-  if (gamesRequired == null && !healthNotice && !checkError && !submitError && !waitCopy) return null
+  if (gamesRequired == null && !healthNotice && !checkError && !submitError && !reading && !reportId) return null
 
   const describedBy = [
     healthNotice ? healthId : '',
@@ -58,20 +64,22 @@ export function EstimateControl({
     .filter(Boolean)
     .join(' ')
 
+  const offer = reading || Boolean(reportId)
+
   return (
     <div className="estimate-block" ref={blockRef}>
-      {waitCopy ? (
-        <div className="estimate-status">
-          <p className="estimate-wait" role="status" aria-busy="true">
-            {waitCopy}
-          </p>
-          <div className="progress-track" aria-hidden="true">
-            <span />
-          </div>
-          <button ref={cancelRef} type="button" className="text-button" onClick={onCancel}>
-            Cancel
-          </button>
-        </div>
+      {offer ? (
+        <ReadStatus
+          reading={reading}
+          depth={depth}
+          reportId={reportId}
+          onCancel={onCancel}
+          cancelRef={cancelRef}
+          readyRef={readyRef}
+          againLabel={!reading && reportId && gamesRequired != null ? `Estimate from these ${gamesRequired}` : null}
+          onAgain={onEstimate}
+          againDisabled={!enabled}
+        />
       ) : gamesRequired != null ? (
         <button
           ref={estimateRef}

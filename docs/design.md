@@ -48,7 +48,7 @@ Schibsted Grotesk, weights 400–700, then `Segoe UI`. Body size is `1.0625rem`,
 
 The landing headline is weight 700, tight leading (`0.96`), and slight negative tracking. Supporting copy is `--ink-dim`. Move notation on the replay is `1.5rem` and weight 600.
 
-Write labels in sentence case. Buttons start with a verb: "Load more", "Select the first 8", "Watch the games". Do not label the back control "Back"; the replay stepper already uses that word. The back control is a chevron, and the Queen's Range wordmark also returns home.
+Write labels in sentence case. Buttons start with a verb: "Load more", "Select the first 8", "Watch the games". Do not label the back control "Back"; the replay stepper already uses that word. The back control is a chevron, and the Queen's Range wordmark (flat ivory queen mark plus the name) also returns home. The same mark is the favicon (transparent background).
 
 ## Focus and targets
 
@@ -71,6 +71,7 @@ When an action is in flight, replace its label with the activity. Do not leave t
 - "Load latest rated games" becomes a brass spinner. The button is disabled, `aria-busy`, and its accessible name is "Loading games from Lichess." The status sentence with that same text stays hidden while the spinner is showing. Errors still render.
 - The spinner is a 2px ring, brass on a 35% brass track, spinning in 0.7s. With reduced motion it does not spin, and the right edge stays open so it still reads as a spinner.
 - "Watch the games" becomes "Creating the replay." The replay page keeps that sentence and a brass progress bar.
+- Estimate with a playable game opens the replay and keeps the read sentence under the moves, with Cancel on that same line. When the read finishes, `See your estimate` is the one brass action there. It does not open the report by itself. On the form, that brass action replaces the estimate button, and `Estimate from these 8` stays as a text action. On How it works, the same sentence is a text link.
 - A check shows "Reading headers." and skeleton bars in the score panel. The bars are `--ink` mixed lightly into `--raised`.
 
 Reduced motion removes animation. Meaning stays in the text, the partial ring, or a full progress track.

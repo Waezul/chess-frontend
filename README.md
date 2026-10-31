@@ -9,4 +9,17 @@ npm install
 npm run dev
 ```
 
-The API base URL in development is `http://127.0.0.1:8000`.
+The API base URL in development is `http://127.0.0.1:8000` (see `VITE_API_BASE_URL` in `src/api/client.ts`).
+
+## Deploy
+
+This UI is a static Vite build. Host it separately from the Chess Elo API (for example Cloudflare Pages, Netlify, or Vercel).
+
+```text
+VITE_API_BASE_URL=https://<your-api-host>
+npm run build
+```
+
+Publish the `dist/` folder. `VITE_API_BASE_URL` must be the public API origin (no path). If it is unset, production builds still call `http://127.0.0.1:8000` and will not reach a remote API.
+
+The backend repo documents Render + Cloudflare Pages as the default free pair.

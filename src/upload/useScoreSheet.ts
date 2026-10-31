@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { checkGames, getEstimate, postEstimate } from '../api/client.ts'
 import { CHECK_FAILED, ESTIMATE_FAILED, isAbortError, messageFrom } from '../api/errors.ts'
 import type { CheckedGame, PoolId } from '../api/types.ts'
-import { pollEstimate, settleRead } from './estimatePoll.ts'
+import { pollEstimate, settleRead, shouldWatchWhileReading } from './estimatePoll.ts'
 import { dropPostedRead, rememberPostedRead, rowsFromChecklist } from './postedRead.ts'
 import {
   canEstimate,
@@ -12,6 +12,7 @@ import {
   SHOWN_GAME_LIMIT,
   shownGames,
   tickedIndexes,
+  watchedIndexes,
   watchLimit,
   type CheckedSnapshot,
 } from './scoreSheet.ts'
@@ -53,6 +54,7 @@ export function useScoreSheet({
   const [submitting, setSubmitting] = useState(false)
   const [reading, setReading] = useState(false)
   const [readDepth, setReadDepth] = useState<number | null>(null)
+  const [reportId, setReportId] = useState<string | null>(null)
   const [shownCount, setShownCount] = useState(SHOWN_GAME_LIMIT)
 
   const latest = useRef({ poolId, pgn, subject })
@@ -84,6 +86,7 @@ export function useScoreSheet({
     setSubmitting(false)
     setReading(false)
     setReadDepth(null)
+    setReportId(null)
     setPhase(next)
     setGames([])
     setTicked([])
@@ -287,12 +290,14 @@ export function useScoreSheet({
     if (depth == null || !Number.isFinite(depth)) return
 
     const jobDepth = depth
+    const watchable = watchedIndexes(games, ticked, watchLimit(gamesRequired), shownCount).length
     const controller = new AbortController()
     submitAbort.current = controller
     submittingRef.current = true
     setSubmitting(true)
     setReading(true)
     setReadDepth(jobDepth)
+    setReportId(null)
     setSubmitError(null)
     try {
       const started = await postEstimate(
@@ -307,6 +312,10 @@ export function useScoreSheet({
       if (controller.signal.aborted) return
       const held = rowsFromChecklist(games, indexes)
       rememberPostedRead({ id: started.id, depth: jobDepth, games: held, subject: checked.subject })
+      if (shouldWatchWhileReading(watchable)) {
+        navigate('/replay')
+        window.scrollTo(0, 0)
+      }
       const outcome = await pollEstimate({
         id: started.id,
         signal: controller.signal,
@@ -318,7 +327,7 @@ export function useScoreSheet({
         if (settled.reportId !== started.id) {
           rememberPostedRead({ id: settled.reportId, depth: jobDepth, games: held, subject: checked.subject })
         }
-        navigate(`/report/${encodeURIComponent(settled.reportId)}`)
+        setReportId(settled.reportId)
         return
       }
       if (settled.error) setSubmitError(settled.error)
@@ -343,6 +352,7 @@ export function useScoreSheet({
     setSubmitting(false)
     setReading(false)
     setReadDepth(null)
+    setReportId(null)
     setSubmitError(null)
   }
 
@@ -355,6 +365,7 @@ export function useScoreSheet({
     submitting,
     reading,
     readDepth,
+    reportId,
     canEstimate: ready,
     shownCount,
     showMore,

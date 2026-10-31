@@ -52,10 +52,12 @@ function Track({ block, labelId }: { block: Extract<ReportBlock, { type: 'track'
         className="band-rail"
         id={labelId}
         role="img"
-        aria-label={`Scale from ${formatCount(block.min)} to ${formatCount(block.max)}`}
+        aria-label={`Scale from ${formatCount(block.min)} to ${formatCount(block.max)}, with lower bound, center, and upper bound`}
       >
         <span className="band-line" />
+        <span className="band-tick band-tick-bound" style={{ left: `${block.start}%` }} />
         <span className="band-tick" style={{ left: `${block.centerAt}%` }} />
+        <span className="band-tick band-tick-bound" style={{ left: `${block.end}%` }} />
       </div>
       <div className="band-ends" aria-hidden="true">
         <span>{formatCount(block.min)}</span>

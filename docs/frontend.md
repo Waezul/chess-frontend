@@ -28,9 +28,9 @@ Build `/` as the landing: queen portrait and headline first, then one upload col
 4. Checklist. Empty until a check succeeds. Title: `Select games`. While checking, the count line says `Reading headers.` Each accepted game has a checkbox. Refused games are visible, unchecked, and not checkable. Show a live count `{ticked} of {games_required} selected`. Offer `Select the first {games_required}` when the sheet is visible.
 5. Watch (optional). When at least one watched accepted game is available, a text control `Watch the game` / `Watch the games` navigates to `/replay`. It does not start an estimate.
 6. Button. Label: `Estimate from these {games_required}` (on the live pools that reads `Estimate from these 8`). Disabled until the number of ticked games equals `games_required` on the selected pool.
-7. Wait. Replaces the button while a job is in flight. Copy: `Reading the games with Stockfish, depth {depth}.` A cancel control stops polling and leaves the checklist as it was.
-8. Failure. One sentence under the button. The checklist stays.
-9. Done. Do not render the band on `/`. On `done`, navigate to `/report/{id}`.
+7. Wait. Replaces the button while a job is in flight. Copy: `Reading the games with Stockfish, depth {depth}.` A cancel control stops polling and leaves the checklist as it was. If at least one watched game can play, leave for `/replay` as soon as the job is accepted. The same sentence, progress, and cancel sit under the moves. The board keeps playing.
+8. Failure. One sentence under the button. The checklist stays. On `/replay` and `/method`, the same sentence replaces the wait if that page was already following the read.
+9. Done. Do not render the band on `/`. Do not open `/report/{id}` on your own. Show `Your estimate is ready.` and `See your estimate`, which opens `/report/{id}`. On the replay that control is the brass action under the moves. On `/` it takes the place of the estimate button, and `Estimate from these {games_required}` stays as a text action. `/method` keeps the sentence and a text link while a read is running or waiting to be opened.
 
 Headline on `/`: `Get your Elo guessed.` Support line on this iteration: `Upload your games. Discover your estimated playing strength. The 10–90% band is the low and high of that guess, not how sure the model is.`
 
@@ -85,13 +85,13 @@ A reload of `/report/{id}` that only has the job id still shows the band when th
 | `idle` | Picker, empty PGN, button disabled. |
 | `checking` | Name and PGN stay editable. Checklist slot says `Reading headers.` A newer edit supersedes the check in flight. |
 | `ready` | Checklist filled. Button enabled only at `games_required` ticks. |
-| `queued` / `running` | Button hidden. Wait copy. Cancel returns to `ready`. |
-| `done` | Navigate to `/report/{id}`. Landing does not keep a result block. |
+| `queued` / `running` | Button hidden. Wait copy. If a watched game can play, `/replay` is open and the same wait sits under the moves. Cancel returns to `ready`. |
+| `done` | Stay on the current page. `Your estimate is ready.` and `See your estimate` open `/report/{id}` when chosen. Landing does not keep a result block. |
 | `failed` | `ready`, plus one error sentence under the button. |
 
 Debounce `games:check` by 400 ms after the PGN or the subject name changes. Do not check an empty PGN. A new check increments a request id and ignores stale responses. Changing the pool clears the checklist, the job, and any in-flight read, then checks again at once if the PGN and the name are both non-empty. Acceptance depends on the pool.
 
-Poll `GET /v1/estimates/{id}` every 1 second. Stop on `done` or `failed`. Stop after 90 seconds, drop the id, and show `The read took too long. Try again.` Cancel also drops the id. There is no cancel route. On `done`, the landing navigates to `/report/{id}`; that page loads the same id again for the estimate body.
+Poll `GET /v1/estimates/{id}` every 1 second. Stop on `done` or `failed`. Stop after 90 seconds, drop the id, and show `The read took too long. Try again.` Cancel also drops the id. There is no cancel route. On `done`, leave the person where they are and offer `See your estimate`. That control opens `/report/{id}`; the report page loads the same id again for the estimate body.
 
 ## HTTP
 
@@ -335,7 +335,7 @@ Use these while the API is absent. Swap them for the network without changing co
       "id": "blitz",
       "label": "Lichess blitz",
       "available": false,
-      "unavailable_reason": "Coming Soon.",
+      "unavailable_reason": "Coming soon.",
       "games_required": 8,
       "elo_min": 800,
       "elo_max": 2400,
@@ -347,7 +347,7 @@ Use these while the API is absent. Swap them for the network without changing co
       "id": "bullet",
       "label": "Lichess bullet",
       "available": false,
-      "unavailable_reason": "Coming Soon.",
+      "unavailable_reason": "Coming soon.",
       "games_required": 8,
       "elo_min": 800,
       "elo_max": 2400,
@@ -545,7 +545,7 @@ That done payload displays on `/report/{id}` as **1480–1960**, center **1710**
 - Pools, including disabled blitz and bullet rows, render from `GET /v1/pools`.
 - The button stays off until `games_required` accepted games are ticked, and it posts those indexes. Label uses `Estimate from these {games_required}`.
 - A blitz game in a classical export shows `wrong_pool` and cannot be ticked.
-- On `done`, `/` navigates to `/report/{id}`. The report prints the rounded band (center + range + q50 track) and `Watch replays`. It does not print lab banner, drivers, or revision footer.
+- On `done`, the page stays put and offers `See your estimate`, which opens `/report/{id}`. A watched game is already on `/replay` while the read runs. The report prints the rounded band (center + range + q50 track) and `Watch replays`. It does not print lab banner, drivers, or revision footer.
 - Reloading `/report/{id}` after the checklist is gone still shows the band when the job is `done`.
 - `/method` matches both fixture cards, including the bias signs, and mounts no board.
 - Switching from classical to rapid re-checks the same PGN, and a rapid game moves from `wrong_pool` to `ok`.

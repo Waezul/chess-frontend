@@ -15,8 +15,16 @@ export type PollOutcome =
   | { type: 'cancelled' }
   | { type: 'rejected'; message: string }
 
+export const ESTIMATE_READY = 'Your estimate is ready.'
+export const SEE_ESTIMATE = 'See your estimate'
+
 export function readingLabel(depth: number): string {
   return `Reading the games with Stockfish, depth ${depth}.`
+}
+
+/** The replay is the waiting room only when a selected game can actually play. */
+export function shouldWatchWhileReading(watchableGames: number): boolean {
+  return watchableGames > 0
 }
 
 export function settleRead(outcome: PollOutcome): { reportId: string | null; error: string | null } {

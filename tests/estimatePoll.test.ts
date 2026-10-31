@@ -8,8 +8,11 @@ import {
   POLL_INTERVAL_MS,
   READ_TIMEOUT,
   pollEstimate,
+  ESTIMATE_READY,
+  SEE_ESTIMATE,
   readingLabel,
   settleRead,
+  shouldWatchWhileReading,
   type PolledJob,
 } from '../src/upload/estimatePoll.ts'
 
@@ -22,6 +25,13 @@ function clock() {
     },
   }
 }
+
+test('a ready read stays an offer, and only a playable game leaves for the replay', () => {
+  assert.equal(ESTIMATE_READY, 'Your estimate is ready.')
+  assert.equal(SEE_ESTIMATE, 'See your estimate')
+  assert.equal(shouldWatchWhileReading(0), false)
+  assert.equal(shouldWatchWhileReading(1), true)
+})
 
 test('the wait copy names the pool depth and invents no percent', () => {
   assert.equal(readingLabel(10), 'Reading the games with Stockfish, depth 10.')

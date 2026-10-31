@@ -103,11 +103,31 @@ function isPool(value: unknown): value is PoolSummary {
   )
 }
 
+const TRAINED_YET = /^No \w+ model is trained yet\.?$/i
+
+function displayUnavailableReason(reason: string | null): string | null {
+  if (!reason) return null
+  if (TRAINED_YET.test(reason.trim())) return 'Coming soon.'
+  return reason
+}
+
+function withDisplayUnavailableReason<T extends { unavailable_reason: string | null; summary?: string[] }>(
+  item: T,
+): T {
+  const unavailable_reason = displayUnavailableReason(item.unavailable_reason)
+  if (!item.summary) return { ...item, unavailable_reason }
+  return {
+    ...item,
+    unavailable_reason,
+    summary: item.summary.map((line) => displayUnavailableReason(line) ?? line),
+  }
+}
+
 function parsePools(value: unknown): PoolSummary[] | null {
   if (!value || typeof value !== 'object' || !('pools' in value)) return null
   const pools = (value as { pools: unknown }).pools
   if (!Array.isArray(pools) || !pools.every(isPool)) return null
-  return pools
+  return pools.map((pool) => withDisplayUnavailableReason(pool))
 }
 
 export async function getHealth(signal: AbortSignal): Promise<Health> {
@@ -159,7 +179,7 @@ function parsePoolCard(value: unknown): PoolCard | null {
   if (!isFiniteNumber(card.test_players)) return null
   if (!Array.isArray(card.summary) || !card.summary.every((line) => typeof line === 'string')) return null
   if (!Array.isArray(card.bins) || !card.bins.every(isBinRow)) return null
-  return {
+  return withDisplayUnavailableReason({
     id: card.id,
     label: card.label,
     available: card.available,
@@ -174,7 +194,7 @@ function parsePoolCard(value: unknown): PoolCard | null {
     test_players: card.test_players,
     summary: card.summary,
     bins: card.bins,
-  }
+  })
 }
 
 export async function getPool(id: PoolId, signal: AbortSignal): Promise<PoolCard> {
