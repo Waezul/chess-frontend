@@ -127,7 +127,7 @@ export function ReplayPage() {
   }
 
   return (
-    <div className="room room-landing">
+    <div className="room room-landing room-replay">
       <SiteHeader overlay backTo="/" backLabel="Get your Elo guessed" />
       <div className="stage" aria-hidden="true" inert>
         <ChessStage

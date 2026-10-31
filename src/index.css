@@ -325,6 +325,43 @@ a {
 }
 
 @media (max-width: 47.99rem) {
+  .room-replay {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .room-replay .stage {
+    position: relative;
+    inset: auto;
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    min-height: min(68vw, 42dvh);
+    margin-top: calc(3.25rem + env(safe-area-inset-top));
+  }
+
+  .room-replay main {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .room-replay .portrait {
+    min-height: 0;
+    align-items: stretch;
+    padding-top: 0;
+  }
+
+  .room-replay .replay-readout {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    width: 100%;
+    max-width: none;
+    padding: 0.7rem var(--page-pad) calc(0.85rem + env(safe-area-inset-bottom));
+  }
+
   .portrait {
     min-height: 72dvh;
     align-items: flex-end;

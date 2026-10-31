@@ -32,6 +32,20 @@ const TABLE_SHOT = {
   narrow: { fov: 68, position: [BOUNDS.cx, 11.6, 6.4] as const, look: [BOUNDS.cx, 1.15, -3.55] as const },
 }
 
+const PHONE_TABLE = {
+  position: [BOUNDS.cx, 9.6, BOUNDS.cz + 7.4] as const,
+  look: [BOUNDS.cx, 0.12, BOUNDS.cz] as const,
+}
+
+function phoneTableFov(aspect: number) {
+  const span = 10.4
+  const distance = 12
+  const safe = Math.max(0.42, Math.min(aspect, 1.8))
+  const needed = span / Math.min(safe, 1)
+  const fov = (2 * Math.atan(needed / 2 / distance) * 180) / Math.PI
+  return Math.min(64, Math.max(30, fov))
+}
+
 const SQUARES = Array.from({ length: 64 }, (_, index) => {
   const file = index % 8
   const rank = Math.floor(index / 8)
@@ -268,7 +282,13 @@ function CameraRig() {
     if (!camera) return
     const zoom = frame?.current.zoom ?? 0
     const from = narrow ? PORTRAIT_SHOT.narrow : PORTRAIT_SHOT.wide
-    const to = narrow ? TABLE_SHOT.narrow : TABLE_SHOT.wide
+    const aspect = width / Math.max(height, 1)
+    const to =
+      width < 768
+        ? { fov: phoneTableFov(aspect), position: PHONE_TABLE.position, look: PHONE_TABLE.look }
+        : narrow
+          ? TABLE_SHOT.narrow
+          : TABLE_SHOT.wide
     camera.fov = mix(from.fov, to.fov, zoom)
     camera.position.set(
       mix(from.position[0], to.position[0], zoom),
