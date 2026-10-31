@@ -158,7 +158,7 @@ export function ReplayPage() {
                     value={gameIndex}
                     onChange={(event) => {
                       setSpot({ pgn: form.pgn, game: Number(event.target.value), ply: 0 })
-                      setPausedPgn(form.pgn)
+                      setPausedPgn(null)
                     }}
                   >
                     {games.map((item, index) => (
